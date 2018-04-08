@@ -17,6 +17,17 @@ def get_data():
             ]
         },
         {
+            "label": _("Transactions"),
+            "items": [
+                {
+                    "type": "doctype",
+                    "name": "Microfinance Disbursement",
+                    "label": "Disbursement",
+                    "description": _("Loan payout to customers"),
+                },
+            ]
+        },
+        {
             "label": _("Setup"),
             "items": [
                 {
