@@ -34,6 +34,10 @@ def get_data():
             ]
         },
         {
+            "label": _("Reports"),
+            "items": []
+        },
+        {
             "label": _("Setup"),
             "items": [
                 {
@@ -62,5 +66,9 @@ def get_data():
                     "description": _("Global loan configuration"),
                 },
             ]
+        },
+        {
+            "label": _("Tools"),
+            "items": []
         },
     ]
