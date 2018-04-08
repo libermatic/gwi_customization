@@ -43,6 +43,14 @@ def get_data():
                 },
                 {
                     "type": "doctype",
+                    "name": "Microfinance Charge Type",
+                    "label": "Loan Charge",
+                    "description": _(
+                        "Types of charges that could be applicable"
+                    ),
+                },
+                {
+                    "type": "doctype",
                     "name": "Microfinance Loan Settings",
                     "label": "Loan Settings",
                     "description": _("Global loan configuration"),
