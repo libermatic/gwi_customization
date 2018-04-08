@@ -30,6 +30,12 @@ def get_data():
                     "label": "Loan Plan",
                     "description": _("Types of loans"),
                 },
+                {
+                    "type": "doctype",
+                    "name": "Microfinance Loan Settings",
+                    "label": "Loan Settings",
+                    "description": _("Global loan configuration"),
+                },
             ]
         },
     ]
