@@ -15,5 +15,21 @@ def get_data():
                     "description": _("Customer loans"),
                 },
             ]
-        }
+        },
+        {
+            "label": _("Setup"),
+            "items": [
+                {
+                    "type": "doctype",
+                    "name": "Customer",
+                    "description": _("Customers"),
+                },
+                {
+                    "type": "doctype",
+                    "name": "Microfinance Loan Plan",
+                    "label": "Loan Plan",
+                    "description": _("Types of loans"),
+                },
+            ]
+        },
     ]
