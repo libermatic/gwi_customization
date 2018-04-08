@@ -25,6 +25,12 @@ def get_data():
                     "label": "Disbursement",
                     "description": _("Loan payout to customers"),
                 },
+                {
+                    "type": "doctype",
+                    "name": "Microfinance Recovery",
+                    "label": "Recovery",
+                    "description": _("Loan payments received from customers"),
+                },
             ]
         },
         {
