@@ -3,8 +3,11 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+from functools import cmp_to_key
 import frappe
 from frappe.model.document import Document
+from frappe.contacts.doctype.address.address import get_address_display
+
 
 def update_doc(doc, salutation=None, customer_name=None, gender=None):
     if doc.salutation != salutation or doc.customer_name != customer_name \
@@ -18,6 +21,27 @@ def update_doc(doc, salutation=None, customer_name=None, gender=None):
 
 
 class MicrofinanceLoanee(Document):
+    def onload(self):
+        filters = [
+            ['Dynamic Link', 'link_doctype', '=', 'Customer'],
+            ['Dynamic Link', 'link_name', '=', self.customer],
+            ['Dynamic Link', 'parenttype', '=', 'Address'],
+        ]
+        address_list = sorted(
+            [
+                a.update({'display': get_address_display(a)})
+                for a in frappe.get_all(
+                    'Address', filters=filters, fields=["*"]
+                )
+            ],
+            key=cmp_to_key(
+                lambda a, b: (int(a.is_primary_address - b.is_primary_address))
+                or (1 if a.modified - b.modified else 0)
+            ),
+            reverse=True
+        )
+        self.set_onload('addr_list', address_list)
+
     def before_save(self):
         if not self.customer:
             try:
