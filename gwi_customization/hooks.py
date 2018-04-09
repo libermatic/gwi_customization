@@ -87,6 +87,13 @@ app_license = "MIT"
 #    }
 # }
 
+doc_events = {
+    'Customer': {
+        'on_update':
+            'gwi_customization.microfinance.doctype.microfinance_loanee.microfinance_loanee.on_customer_update',
+    }
+}
+
 # Scheduled Tasks
 # ---------------
 
