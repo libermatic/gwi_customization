@@ -2,5 +2,12 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Microfinance Charge Type', {
-  refresh: function(frm) {},
+  refresh: function(frm) {
+    frm.fields_dict['account'].get_query = doc => ({
+      filters: {
+        root_type: 'Income',
+        is_group: false,
+      },
+    });
+  },
 });
