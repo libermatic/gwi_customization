@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from . import __version__ as app_version
+from . import __version__
 
-app_name = "gwi_customization"
-app_title = "GWI Customization"
-app_publisher = "Libermatic"
-app_description = "Customizations for GWI"
-app_icon = "fa fa-university"
-app_color = "#8BC34A"
-app_email = "info@libermatic.com"
-app_license = "MIT"
+app_name = 'gwi_customization'
+app_version = __version__
+app_title = 'GWI Customization'
+app_publisher = 'Libermatic'
+app_description = 'Customizations for GWI'
+app_icon = 'fa fa-university'
+app_color = '#8BC34A'
+app_email = 'info@libermatic.com'
+app_license = 'MIT'
 
 # Includes in <head>
 # ------------------
@@ -63,14 +64,16 @@ setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "gwi_customization.notifications.get_notification_config"
+# notification_config = \
+#    "gwi_customization.notifications.get_notification_config"
 
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
 
 # permission_query_conditions = {
-#     "Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
+#     "Event":
+#        "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
 #
 # has_permission = {
@@ -80,14 +83,6 @@ setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
 # Document Events
 # ---------------
 # Hook on document methods and events
-
-# doc_events = {
-#     "*": {
-#         "on_update": "method",
-#         "on_cancel": "method",
-#         "on_trash": "method"
-#    }
-# }
 
 doc_events = {
     'Customer': {
@@ -126,5 +121,6 @@ before_tests = 'gwi_customization.install.before_tests'
 # ------------------------------
 #
 # override_whitelisted_methods = {
-#     "frappe.desk.doctype.event.event.get_events": "gwi_customization.event.get_events"
+#     "frappe.desk.doctype.event.event.get_events":
+#        "gwi_customization.event.get_events"
 # }
