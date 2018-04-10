@@ -1,0 +1,23 @@
+[
+  {
+    "doctype": "Microfinance Loan Plan",
+    "loan_plan": "_Test Loan Plan Basic",
+    "rate_of_interest": 10,
+    "calculation_slab": 10000.0,
+    "rate_of_late_charges": 5,
+    "effective_from": "2018-03-01",
+    "income_multiple": 20,
+    "max_duration": 60
+  },
+  {
+    "doctype": "Microfinance Loan Plan",
+    "loan_plan": "_Test Loan Plan Eco",
+    "rate_of_interest": 5,
+    "calculation_slab": 10000.0,
+    "rate_of_late_charges": 5,
+    "effective_from": "2018-03-01",
+    "income_multiple": 15,
+    "max_duration": 60,
+    "force_max_duration": 1
+  }
+]
