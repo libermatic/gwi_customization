@@ -12,20 +12,8 @@ test_dependencies = ['Microfinance Loan Plan']
 
 
 class TestMicrofinanceLoan(unittest.TestCase):
-    def setUp(self):
-        create_test_loannee(customer_name='_Test Loanee 1')
-
     def tearDown(self):
-        try:
-            loan = frappe.get_doc('Microfinance Loan', '_TEST LOAN')
-            if loan.docstatus == 1:
-                loan.cancel()
-        except frappe.DoesNotExistError:
-            pass
-        frappe.delete_doc_if_exists(
-            'Microfinance Loan', '_TEST LOAN', force=1
-        )
-        remove_test_loanee('_Test Loanee 1')
+        remove_test_loan()
 
     def test_statuses(self):
         loan = create_test_loan()
@@ -60,6 +48,7 @@ class TestMicrofinanceLoan(unittest.TestCase):
 
 
 def create_test_loan(**kwargs):
+    create_test_loannee(customer_name='_Test Loanee 1')
     args = frappe._dict(kwargs)
     doc = frappe.new_doc('Microfinance Loan')
     doc.update({
@@ -76,3 +65,16 @@ def create_test_loan(**kwargs):
         if not args.do_not_submit:
             doc.submit()
     return doc
+
+
+def remove_test_loan(loan='_TEST LOAN'):
+    try:
+        doc = frappe.get_doc('Microfinance Loan', loan)
+        if doc.docstatus == 1:
+            doc.cancel()
+    except frappe.DoesNotExistError:
+        pass
+    frappe.delete_doc_if_exists(
+        'Microfinance Loan', loan, force=True
+    )
+    remove_test_loanee('_Test Loanee 1')
