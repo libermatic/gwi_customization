@@ -9,21 +9,7 @@ import unittest
 
 class TestMicrofinanceLoanee(unittest.TestCase):
     def tearDown(self):
-        filters = [
-            ['customer_name', 'in', '_Test Loanee, _Test Another']
-        ]
-        loanees = map(
-            lambda x: x.update({'doctype': 'Microfinance Loanee'}),
-            frappe.get_all('Microfinance Loanee', filters=filters)
-        )
-        customers = map(
-            lambda x: x.update({'doctype': 'Customer'}),
-            frappe.get_all('Customer', filters=filters)
-        )
-        for doc in loanees + customers:
-            frappe.delete_doc(
-                doctype=doc.doctype, name=doc.name, force=True
-            )
+        remove_test_loanee()
 
     def test_creates_customer(self):
         loanee = create_test_loannee()
@@ -99,3 +85,21 @@ def create_test_loannee(**kwargs):
     if not args.do_not_insert:
         doc.insert()
     return doc
+
+
+def remove_test_loanee(customer_name='_Test Loanee, _Test Another'):
+    filters = [
+        ['customer_name', 'in', customer_name]
+    ]
+    loanees = map(
+        lambda x: x.update({'doctype': 'Microfinance Loanee'}),
+        frappe.get_all('Microfinance Loanee', filters=filters)
+    )
+    customers = map(
+        lambda x: x.update({'doctype': 'Customer'}),
+        frappe.get_all('Customer', filters=filters)
+    )
+    for doc in loanees + customers:
+        frappe.delete_doc(
+            doctype=doc.doctype, name=doc.name, force=True
+        )
