@@ -29,5 +29,9 @@ frappe.ui.form.on('Microfinance Loan', {
         frm.set_value('interest_income_account', interest_income_account);
       }
     }
+    if (frm.doc.docstatus > 0) {
+      frm.set_df_property('loan_principal', 'read_only', 1);
+      frm.set_df_property('recovery_amount', 'read_only', 1);
+    }
   },
 });
