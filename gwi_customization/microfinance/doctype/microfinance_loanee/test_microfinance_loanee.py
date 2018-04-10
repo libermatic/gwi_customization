@@ -54,6 +54,15 @@ class TestMicrofinanceLoanee(unittest.TestCase):
         for k in keys:
             self.assertEqual(loanee.get(k), customer.get(k))
 
+    def test_links_to_existing_customer(self):
+        customer = frappe.get_doc({
+            'doctype': 'Customer',
+            'name': '_Test Loan Customer',
+            'customer_name': '_Test Another',
+        }).insert()
+        loanee = create_test_loannee(customer_name='_Test Another')
+        self.assertEqual(customer.name, loanee.customer)
+
 
 def create_test_loannee(**kwargs):
     args = frappe._dict(kwargs)
