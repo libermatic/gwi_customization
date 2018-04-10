@@ -56,6 +56,8 @@ app_license = "MIT"
 
 # before_install = "gwi_customization.install.before_install"
 # after_install = "gwi_customization.install.after_install"
+setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
+
 
 # Desk Notifications
 # ------------------
@@ -118,7 +120,7 @@ doc_events = {
 # Testing
 # -------
 
-# before_tests = "gwi_customization.install.before_tests"
+before_tests = 'gwi_customization.install.before_tests'
 
 # Overriding Whitelisted Methods
 # ------------------------------
