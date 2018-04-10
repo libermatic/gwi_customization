@@ -12,7 +12,7 @@ class TestMicrofinanceLoanee(unittest.TestCase):
         remove_test_loanee()
 
     def test_creates_customer(self):
-        loanee = create_test_loannee()
+        loanee = create_test_loanee()
         customer = frappe.get_doc('Customer', loanee.customer)
         self.assertIsNotNone(customer)
         self.assertEqual(loanee.customer, customer.name)
@@ -21,7 +21,7 @@ class TestMicrofinanceLoanee(unittest.TestCase):
             self.assertEqual(loanee.get(k), customer.get(k))
 
     def test_updates_customer(self):
-        loanee = create_test_loannee()
+        loanee = create_test_loanee()
         loanee.update({
             'salutation': 'Dr',
             'customer_name': '_Test Another',
@@ -34,7 +34,7 @@ class TestMicrofinanceLoanee(unittest.TestCase):
             self.assertEqual(loanee.get(k), customer.get(k))
 
     def test_updates_doc_on_customer_update(self):
-        pre_loanee = create_test_loannee()
+        pre_loanee = create_test_loanee()
         customer = frappe.get_doc('Customer', pre_loanee.customer)
         customer.update({
             'salutation': 'Dr',
@@ -60,11 +60,11 @@ class TestMicrofinanceLoanee(unittest.TestCase):
             'name': '_Test Loan Customer',
             'customer_name': '_Test Another',
         }).insert()
-        loanee = create_test_loannee(customer_name='_Test Another')
+        loanee = create_test_loanee(customer_name='_Test Another')
         self.assertEqual(customer.name, loanee.customer)
 
 
-def create_test_loannee(**kwargs):
+def create_test_loanee(**kwargs):
     args = frappe._dict(kwargs)
     doc = frappe.new_doc('Microfinance Loanee')
     doc.update({

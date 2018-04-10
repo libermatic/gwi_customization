@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 import unittest
 from gwi_customization.microfinance.doctype.microfinance_loanee.\
-    test_microfinance_loanee import create_test_loannee, remove_test_loanee
+    test_microfinance_loanee import create_test_loanee, remove_test_loanee
 
 test_dependencies = ['Microfinance Loan Plan']
 
@@ -48,8 +48,9 @@ class TestMicrofinanceLoan(unittest.TestCase):
 
 
 def create_test_loan(**kwargs):
-    create_test_loannee(customer_name='_Test Loanee 1')
     args = frappe._dict(kwargs)
+    if not args.skip_dependencies:
+        create_test_loanee(customer_name='_Test Loanee 1')
     doc = frappe.new_doc('Microfinance Loan')
     doc.update({
         'loan_no': args.loan_no or '_Test Loan',
@@ -67,7 +68,7 @@ def create_test_loan(**kwargs):
     return doc
 
 
-def remove_test_loan(loan='_TEST LOAN'):
+def remove_test_loan(loan='_TEST LOAN', keep_dependencies=False):
     try:
         doc = frappe.get_doc('Microfinance Loan', loan)
         if doc.docstatus == 1:
@@ -77,4 +78,5 @@ def remove_test_loan(loan='_TEST LOAN'):
     frappe.delete_doc_if_exists(
         'Microfinance Loan', loan, force=True
     )
-    remove_test_loanee('_Test Loanee 1')
+    if not keep_dependencies:
+        remove_test_loanee('_Test Loanee 1')
