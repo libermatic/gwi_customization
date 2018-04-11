@@ -66,8 +66,7 @@ class TestMicrofinanceLoanee(unittest.TestCase):
 
 def create_test_loanee(**kwargs):
     args = frappe._dict(kwargs)
-    doc = frappe.new_doc('Microfinance Loanee')
-    doc.update({
+    fields = {
         'salutation': args.salutation or 'Ms',
         'customer_name': args.customer_name or '_Test Loanee',
         'gender': args.gender or 'Female',
@@ -90,9 +89,20 @@ def create_test_loanee(**kwargs):
         'name_of_bank': args.name_of_bank or 'SBI',
         'account_no': args.account_no or '1034445555',
         'card_no': args.card_no or '44445555',
-    })
+    }
+    doc = frappe.new_doc('Microfinance Loanee')
+    doc.update(fields)
     if not args.do_not_insert:
-        doc.insert()
+        try:
+            doc.insert()
+        except frappe.UniqueValidationError:
+            existing = frappe.get_doc(
+                'Microfinance Loanee',
+                {'customer_name': args.customer_name or '_Test Loanee'},
+            )
+            existing.update(fields)
+            existing.save()
+            return existing
     return doc
 
 

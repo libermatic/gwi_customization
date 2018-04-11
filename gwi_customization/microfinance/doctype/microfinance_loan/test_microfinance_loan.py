@@ -50,7 +50,7 @@ class TestMicrofinanceLoan(unittest.TestCase):
 def create_test_loan(**kwargs):
     args = frappe._dict(kwargs)
     if not args.skip_dependencies:
-        create_test_loanee(customer_name='_Test Loanee 1')
+        create_test_loanee(customer_name=args.customer or '_Test Loanee 1')
     doc = frappe.new_doc('Microfinance Loan')
     doc.update({
         'loan_no': args.loan_no or '_Test Loan',
