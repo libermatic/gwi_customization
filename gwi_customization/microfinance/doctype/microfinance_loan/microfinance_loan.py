@@ -29,10 +29,10 @@ class MicrofinanceLoan(Document):
             self.calculation_slab = calculation_slab
 
         # set Loan Settings values
-        loan_account, interest_income_account = frappe.get_value(
+        interest_income_account, loan_account = frappe.get_value(
             'Microfinance Loan Settings',
             None,
-            ['loan_account', 'interest_income_account']
+            ['interest_income_account', 'loan_account']
         )
         if not self.loan_account:
             self.loan_account = loan_account

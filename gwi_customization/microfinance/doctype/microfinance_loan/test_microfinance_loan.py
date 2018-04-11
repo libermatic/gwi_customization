@@ -33,10 +33,10 @@ class TestMicrofinanceLoan(unittest.TestCase):
         self.assertEqual(loan.calculation_slab, 10000.0)
 
     def test_accounts(self):
-        loan_account, interest_income_account = frappe.get_value(
+        interest_income_account, loan_account = frappe.get_value(
             'Microfinance Loan Settings',
             None,
-            ['loan_account', 'interest_income_account']
+            ['interest_income_account', 'loan_account']
         )
         loan = create_test_loan(do_not_submit=True)
         self.assertEqual(

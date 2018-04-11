@@ -5,7 +5,7 @@ import frappe
 
 settings_accounts = {
     'loan_account': {
-        'account_name': 'Loans on Collateral',
+        'account_name': 'Microfinance Loans',
         'parent_account': 'Loans and Advances (Assets)',
     },
     'interest_income_account': {
