@@ -44,11 +44,12 @@ class MicrofinanceLoanee(Document):
 
     def before_save(self):
         if not self.customer:
-            try:
-                customer = frappe.get_doc('Customer', {
-                    'customer_name': self.customer_name
-                })
-            except frappe.DoesNotExistError:
+            customer_name = frappe.get_value(
+                'Customer',
+                filters={'customer_name': self.customer_name},
+                fieldname='name',
+            )
+            if not customer_name:
                 customer = frappe.get_doc({
                     'doctype': 'Customer',
                     'salutation': self.salutation,
@@ -57,7 +58,9 @@ class MicrofinanceLoanee(Document):
                     'customer_type': 'Individual',
                     'customer_group': 'Individual',
                 }).insert()
-            self.customer = customer.name
+                self.customer = customer.name
+            else:
+                self.customer = customer_name
 
     def on_update(self):
         customer = frappe.get_doc('Customer', self.customer)
@@ -70,16 +73,16 @@ class MicrofinanceLoanee(Document):
 
 
 def on_customer_update(customer, event=None):
-    try:
-        loanee = frappe.get_doc(
-            'Microfinance Loanee',
-            {'customer': customer.name}
-        )
+    loanee_name = frappe.get_value(
+        'Microfinance Loanee',
+        filters={'customer': customer.name},
+        fieldname='name',
+    )
+    if loanee_name:
+        loanee = frappe.get_doc('Microfinance Loanee', loanee_name)
         update_doc(
             loanee,
             salutation=customer.salutation,
             customer_name=customer.customer_name,
             gender=customer.gender,
         )
-    except frappe.DoesNotExistError:
-        pass
