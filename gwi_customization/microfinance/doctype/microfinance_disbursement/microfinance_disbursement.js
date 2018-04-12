@@ -40,10 +40,7 @@ frappe.ui.form.on('Microfinance Disbursement', {
   },
   mode_of_payment: async function(frm) {
     const { mode_of_payment, company } = frm.doc;
-    if (mode_of_payment == 'Cheque') {
-      frm.set_df_property('cheque_no', 'reqd', 1);
-      frm.set_df_property('cheque_date', 'reqd', 1);
-    }
+    frm.toggle_reqd(['cheque_no', 'cheque_date'], mode_of_payment == 'Cheque');
     const { message } = await frappe.call({
       method:
         'erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account',
