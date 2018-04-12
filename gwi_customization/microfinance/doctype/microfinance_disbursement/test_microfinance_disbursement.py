@@ -81,7 +81,7 @@ class TestMicrofinanceDisbursement(unittest.TestCase):
         self.assertEqual(disbursement_status, 'Partially Disbursed')
 
     def test_gle(self):
-        disbursement = create_test_disbursement(amount=50000.0, charges=[])
+        disbursement = create_test_disbursement(amount=50000.0)
         exp_gle = dict((d[0], d) for d in [
             ['Microfinance Loans - _TC', 50000, 0, None],
             ['Cash - _TC', 0, 50000, '_Test Loanee 1'],
@@ -96,7 +96,7 @@ class TestMicrofinanceDisbursement(unittest.TestCase):
             self.assertEquals(disbursement.loan, gle.against_voucher)
 
     def test_cancel_on_gle(self):
-        disbursement = create_test_disbursement(amount=50000.0, charges=[])
+        disbursement = create_test_disbursement(amount=50000.0)
         disbursement.cancel()
         gl_entries = get_disburement_gle(disbursement.name)
         self.assertEqual(len(gl_entries), 0)

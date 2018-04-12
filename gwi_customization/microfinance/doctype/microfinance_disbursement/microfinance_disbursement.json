@@ -162,7 +162,7 @@
    "read_only": 1, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 0, 
+   "reqd": 1, 
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -731,7 +731,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2018-04-12 02:44:45.115349", 
+ "modified": "2018-04-12 15:30:32.372614", 
  "modified_by": "Administrator", 
  "module": "Microfinance", 
  "name": "Microfinance Disbursement", 
