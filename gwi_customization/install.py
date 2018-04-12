@@ -32,8 +32,9 @@ def _create_account(doc, company_name, company_abbr):
 
 def before_tests():
     frappe.clear_cache()
-    frappe.get_test_records('Company')
-    frappe.get_test_records('Cost Center')
+    frappe.defaults.set_user_default(
+        'company', '_Test Company', 'Administrator'
+    )
     settings = frappe.get_single('Microfinance Loan Settings')
     settings.update({
         'mode_of_payment': 'Cash',
