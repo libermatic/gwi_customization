@@ -3,7 +3,9 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+import math
 import frappe
+from frappe.utils import flt
 
 
 def get_gle_by(voucher_type):
@@ -27,3 +29,16 @@ def get_gle_by(voucher_type):
             as_dict=1
         )
     return fn
+
+
+def interest(amount, rate=0.0, slab=0.0):
+    """
+        Return slabbed interest
+
+        :param amount: Amount for which interest is to be calculated
+        :param rate: Rate of interest in %
+        :param slab: Discrete steps of amount on which interest is calculated
+    """
+    if slab:
+        return (math.ceil(flt(amount) / slab) * slab) * rate / 100.0
+    return amount * flt(rate) / 100.0
