@@ -8,7 +8,7 @@ from frappe.utils import formatdate
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
-from gwi_customization.microfinance.utils import interest
+from gwi_customization.microfinance.utils import calc_interest
 
 
 class MicrofinanceLoanInterest(AccountsController):
@@ -25,7 +25,7 @@ class MicrofinanceLoanInterest(AccountsController):
                 self.loan,
                 ['calculation_slab', 'rate_of_interest'],
             )
-            self.billed_amount = interest(
+            self.billed_amount = calc_interest(
                 outstanding_principal, rate_of_interest, calculation_slab
             )
 
