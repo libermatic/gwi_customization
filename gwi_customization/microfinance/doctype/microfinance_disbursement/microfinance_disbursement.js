@@ -1,7 +1,7 @@
 // Copyright (c) 2018, Libermatic and contributors
 // For license information, please see license.txt
 
-function calculate_totals(frm) {
+function calculate_disbursement_totals(frm) {
   const { amount = 0, recovered_amount = 0, charges = [] } = frm.doc;
   frm.set_value('total_disbursed', amount - recovered_amount);
   frm.set_value(
@@ -16,8 +16,8 @@ frappe.ui.form.on('Microfinance Disbursement', {
       filters: { docstatus: 1 },
     });
     frappe.ui.form.on('Microfinance Other Charge', {
-      charge_amount: calculate_totals,
-      charges_remove: calculate_totals,
+      charge_amount: calculate_disbursement_totals,
+      charges_remove: calculate_disbursement_totals,
     });
   },
   loan: async function(frm) {
@@ -31,8 +31,8 @@ frappe.ui.form.on('Microfinance Disbursement', {
       frm.set_value('amount', amount);
     }
   },
-  amount: calculate_totals,
-  recovered_amount: calculate_totals,
+  amount: calculate_disbursement_totals,
+  recovered_amount: calculate_disbursement_totals,
   is_opening: function(frm) {
     if (!frm.doc['is_opening']) {
       frm.set_value('recovered_amount', null);
