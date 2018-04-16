@@ -45,7 +45,6 @@ def _generate_periods(init_date, interest_amount):
         start_date = add_days(end_date, 1)
 
 
-@frappe.whitelist()
 def get_unpaid(loan):
     return frappe.db.sql(
         """
@@ -60,7 +59,6 @@ def get_unpaid(loan):
     )
 
 
-@frappe.whitelist()
 def get_last_paid(loan):
     res = frappe.db.sql(
         """
@@ -107,3 +105,16 @@ def allocate_interests(loan, posting_date, amount_to_allocate):
         periods.append(per)
         to_allocate -= per.get('allocated_amount')
     return periods
+
+
+@frappe.whitelist()
+def get_current_interest(loan, posting_date):
+    outstanding = get_outstanding_principal(loan, posting_date)
+    calculation_slab, rate_of_interest = frappe.get_value(
+        'Microfinance Loan',
+        loan,
+        ['calculation_slab', 'rate_of_interest'],
+    )
+    return calc_interest(
+        outstanding, rate_of_interest, calculation_slab
+    )
