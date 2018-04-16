@@ -31,7 +31,7 @@ def get_gle_by(voucher_type):
     return fn
 
 
-def interest(amount, rate=0.0, slab=0.0):
+def calc_interest(amount, rate=0.0, slab=0.0):
     """
         Return slabbed interest
 
