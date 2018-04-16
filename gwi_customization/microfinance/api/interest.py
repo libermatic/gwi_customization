@@ -62,7 +62,7 @@ def get_unpaid(loan):
 
 @frappe.whitelist()
 def get_last_paid(loan):
-    return frappe.db.sql(
+    res = frappe.db.sql(
         """
             SELECT
                 loan, posting_date, period, start_date, end_date,
@@ -74,6 +74,7 @@ def get_last_paid(loan):
         """.format(loan=loan),
         as_dict=True,
     )
+    return res[0] if res else None
 
 
 @frappe.whitelist()
@@ -103,7 +104,6 @@ def allocate_interests(loan, posting_date, amount_to_allocate):
     gen_per = _generate_periods(init_date, interest_amount)
     while to_allocate > 0:
         per = _allocate(gen_per.next(), to_allocate)
-        print(per)
         periods.append(per)
         to_allocate -= per.get('allocated_amount')
     return periods
