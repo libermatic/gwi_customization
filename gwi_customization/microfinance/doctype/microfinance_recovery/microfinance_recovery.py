@@ -16,12 +16,14 @@ from gwi_customization.microfinance.api.interest \
 from gwi_customization.microfinance.utils.fp import compose, update
 
 
-def create_or_update_interest(opts, update=False):
+def _create_or_update_interest(opts, update=0):
     name = opts.get('ref_interest') \
         or make_name(opts.get('loan'), opts.get('start_date'))
     if update or frappe.db.exists('Microfinance Loan Interest', name):
         doc = frappe.get_doc('Microfinance Loan Interest', name)
-        doc.update({'paid_amount': opts.get('paid_amount')})
+        paid_amount = doc.paid_amount - opts.get('paid_amount') \
+            if update else doc.paid_amount + opts.get('paid_amount')
+        doc.update({'paid_amount': paid_amount})
         doc.save()
     else:
         doc = frappe.new_doc('Microfinance Loan Interest')
@@ -59,8 +61,7 @@ class MicrofinanceRecovery(AccountsController):
 
     def on_cancel(self):
         self.make_gl_entries(cancel=1)
-        for item in self.periods:
-            frappe.delete_doc('Microfinance Loan Interest', item.ref_interest)
+        self.make_interests(cancel=1)
         self.update_loan_status()
 
     def get_gl_dict(self, args):
@@ -72,7 +73,9 @@ class MicrofinanceRecovery(AccountsController):
         return super(MicrofinanceRecovery, self).get_gl_dict(gl_dict)
 
     def make_gl_entries(self, cancel=0, adv_adj=0):
-        gl_entries = self.add_loan_gl_entries()
+        gl_entries = []
+        if self.principal_amount:
+            gl_entries = self.add_loan_gl_entries(gl_entries)
         if self.periods:
             gl_entries = self.add_interest_gl_entries(gl_entries)
         if self.charges:
@@ -133,7 +136,7 @@ class MicrofinanceRecovery(AccountsController):
         return compose(
             partial(
                 map,
-                partial(create_or_update_interest, update=cancel),
+                partial(_create_or_update_interest, update=cancel),
             ),
             partial(
                 map,
@@ -147,10 +150,7 @@ class MicrofinanceRecovery(AccountsController):
                         'start_date': x.start_date,
                         'end_date': x.end_date,
                         'billed_amount': x.billed_amount,
-                        'paid_amount':
-                            x.billed_amount -
-                            x.outstanding_amount +
-                            x.allocated_amount,
+                        'paid_amount': x.allocated_amount,
                     }
                 ),
             ),
