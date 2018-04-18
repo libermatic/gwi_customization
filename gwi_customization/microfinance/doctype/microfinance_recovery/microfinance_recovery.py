@@ -3,7 +3,7 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-from functools import reduce
+from functools import reduce, partial
 import frappe
 from frappe.utils import flt
 from erpnext.controllers.accounts_controller import AccountsController
@@ -11,7 +11,23 @@ from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
     import get_bank_cash_account
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
-from gwi_customization.microfinance.api.interest import allocate_interests
+from gwi_customization.microfinance.api.interest \
+    import allocate_interests, make_name
+from gwi_customization.microfinance.utils.fp import compose, update
+
+
+def create_or_update_interest(opts, update=False):
+    name = opts.get('ref_interest') \
+        or make_name(opts.get('loan'), opts.get('start_date'))
+    if update or frappe.db.exists('Microfinance Loan Interest', name):
+        doc = frappe.get_doc('Microfinance Loan Interest', name)
+        doc.update({'paid_amount': opts.get('paid_amount')})
+        doc.save()
+    else:
+        doc = frappe.new_doc('Microfinance Loan Interest')
+        doc.update(opts)
+        doc.insert()
+    return name
 
 
 class MicrofinanceRecovery(AccountsController):
@@ -33,17 +49,18 @@ class MicrofinanceRecovery(AccountsController):
             self.append('periods', period)
 
     def before_submit(self):
-        self.make_interests()
+        interest_names = self.make_interests()
+        for idx, item in enumerate(self.periods):
+            item.ref_interest = interest_names[idx]
 
     def on_submit(self):
         self.make_gl_entries()
         self.update_loan_status()
 
-    def before_cancel(self):
-        self.make_interests(cancel=1)
-
     def on_cancel(self):
         self.make_gl_entries(cancel=1)
+        for item in self.periods:
+            frappe.delete_doc('Microfinance Loan Interest', item.ref_interest)
         self.update_loan_status()
 
     def get_gl_dict(self, args):
@@ -113,24 +130,31 @@ class MicrofinanceRecovery(AccountsController):
         ]
 
     def make_interests(self, cancel=0):
-        if cancel:
-            for period in self.periods:
-                frappe.delete_doc_if_exists(
-                    'Microfinance Loan Interest', period.ref_interest
-                )
-        else:
-            for period in self.periods:
-                interest = frappe.get_doc({
-                    'doctype': 'Microfinance Loan Interest',
-                    'loan': self.loan,
-                    'posting_date': self.posting_date,
-                    'period': period.period_label,
-                    'start_date': period.start_date,
-                    'end_date': period.end_date,
-                    'billed_amount': period.billed_amount,
-                    'paid_amount': period.allocated_amount,
-                }).insert(ignore_if_duplicate=True)
-                period.update({'ref_interest': interest.name})
+        return compose(
+            partial(
+                map,
+                partial(create_or_update_interest, update=cancel),
+            ),
+            partial(
+                map,
+                compose(
+                    update({
+                        'loan': self.loan,
+                        'posting_date': self.posting_date,
+                    }),
+                    lambda x: {
+                        'period': x.period_label,
+                        'start_date': x.start_date,
+                        'end_date': x.end_date,
+                        'billed_amount': x.billed_amount,
+                        'paid_amount':
+                            x.billed_amount -
+                            x.outstanding_amount +
+                            x.allocated_amount,
+                    }
+                ),
+            ),
+        )(self.periods)
 
     def update_loan_status(self):
         """Method update recovery_status of Loan"""
