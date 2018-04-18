@@ -81,10 +81,6 @@ class TestMicrofinanceRecovery(unittest.TestCase):
             total_amount=22000.0,
             principal_amount=5000.0,
         )
-        periods = frappe.get_all(
-            'Microfinance Loan Interest', filters={'loan': '_Test Loan 1'}
-        )
-        self.assertEqual(len(periods), 2)
         period = frappe.get_doc(
             'Microfinance Loan Interest', recovery.periods[1].ref_interest
         ).as_dict()
@@ -99,6 +95,29 @@ class TestMicrofinanceRecovery(unittest.TestCase):
         }
         for k, v in to_check.items():
             self.assertEqual(v, period.get(k))
+
+    def test_interests_multiple_paid_amounts(self):
+        create_test_recovery(
+            total_amount=22000.0,
+            principal_amount=5000.0,
+        )
+        exp_amounts = dict((d[0], d) for d in [
+            ['_Test Loan 1/2017-09', 7000],
+            ['_Test Loan 1/2017-08', 10000],
+        ])
+        periods = frappe.get_all(
+            'Microfinance Loan Interest',
+            filters={'loan': '_Test Loan 1'},
+            fields=['name', 'paid_amount'],
+        )
+        self.assertEqual(len(periods), 2)
+        for per in periods:
+            self.assertEquals(
+                exp_amounts[per.get('name')][0], per.get('name')
+            )
+            self.assertEquals(
+                exp_amounts[per.get('name')][1], per.get('paid_amount')
+            )
 
     def test_cancel_on_interests(self):
         recovery = create_test_recovery(
