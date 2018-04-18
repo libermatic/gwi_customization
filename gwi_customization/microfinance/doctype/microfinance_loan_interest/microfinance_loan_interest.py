@@ -4,16 +4,16 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import formatdate
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
+from gwi_customization.microfinance.api.interest import make_name
 from gwi_customization.microfinance.utils import calc_interest
 
 
 class MicrofinanceLoanInterest(AccountsController):
     def autoname(self):
-        self.name = self.loan + '/' + formatdate(self.start_date, 'YYYY-MM')
+        self.name = make_name(self.loan, self.start_date)
 
     def before_save(self):
         if not self.billed_amount:

@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import flt, add_days, get_last_day, getdate
+from frappe.utils import flt, add_days, get_last_day, getdate, formatdate
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.utils import calc_interest
 
@@ -118,3 +118,7 @@ def get_current_interest(loan, posting_date):
     return calc_interest(
         outstanding, rate_of_interest, calculation_slab
     )
+
+
+def make_name(loan, start_date):
+    return loan + '/' + formatdate(start_date, 'YYYY-MM')
