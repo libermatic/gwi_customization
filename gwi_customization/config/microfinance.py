@@ -41,7 +41,14 @@ def get_data():
         },
         {
             "label": _("Reports"),
-            "items": []
+            "items": [
+                {
+                    "type": "report",
+                    "is_query_report": True,
+                    "name": "Microfinance Loan Summary",
+                    "label": "Loan Summary",
+                },
+            ]
         },
         {
             "label": _("Setup"),
