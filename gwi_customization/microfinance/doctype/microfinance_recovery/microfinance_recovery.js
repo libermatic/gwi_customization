@@ -10,21 +10,12 @@ function calculate_recovery_totals(frm) {
   );
 }
 
-frappe.ui.form.on('Microfinance Recovery', {
-  refresh: function(frm) {
-    frm.fields_dict['loan'].get_query = doc => ({
-      filters: { docstatus: 1 },
-    });
-    frappe.ui.form.on('Microfinance Other Charge', {
-      charge_amount: calculate_recovery_totals,
-      charges_remove: calculate_recovery_totals,
-    });
-  },
-  loan: async function(frm) {
-    const { loan, posting_date } = frm.doc;
+async function set_recovery_amounts(frm) {
+  const { loan, posting_date } = frm.doc;
+  if (loan && posting_date) {
     const [
-      { message: interest_amount },
-      { message: { recovery_amount } = {} },
+      { message: interest_amount = 0 },
+      { message: { recovery_amount = 0 } = {} },
     ] = await Promise.all([
       frappe.call({
         method:
@@ -35,7 +26,21 @@ frappe.ui.form.on('Microfinance Recovery', {
     ]);
     frm.set_value('total_amount', interest_amount + recovery_amount);
     frm.set_value('principal_amount', recovery_amount);
+  }
+}
+
+frappe.ui.form.on('Microfinance Recovery', {
+  refresh: function(frm) {
+    frm.fields_dict['loan'].get_query = doc => ({
+      filters: { docstatus: 1 },
+    });
+    frappe.ui.form.on('Microfinance Other Charge', {
+      charge_amount: calculate_recovery_totals,
+      charges_remove: calculate_recovery_totals,
+    });
   },
+  loan: set_recovery_amounts,
+  posting_date: set_recovery_amounts,
   total_amount: calculate_recovery_totals,
   principal_amount: calculate_recovery_totals,
   mode_of_payment: async function(frm) {
