@@ -52,3 +52,26 @@ def get_outstanding_principal(loan, posting_date=None):
         """.format(" AND ".join(cond))
     )[0][0] or 0
     return outstanding
+
+
+def update_recovery_status(loan_name, posting_date):
+    """Method update recovery_status of Loan"""
+    loan = frappe.get_doc('Microfinance Loan', loan_name)
+    outstanding_principal = get_outstanding_principal(
+        loan_name, posting_date=posting_date
+    )
+    current_status = loan.recovery_status
+    current_clear = loan.clear_date
+    if outstanding_principal == 0 \
+            and loan.disbursement_status == 'Fully Disbursed':
+        loan.clear_date = posting_date
+        loan.recovery_status = 'Repaid'
+    else:
+        loan.clear_date = None
+        if outstanding_principal == loan.loan_principal:
+            loan.recovery_status = 'Not Started'
+        else:
+            loan.recovery_status = 'In Progress'
+    if loan.recovery_status != current_status \
+            or loan.clear_date != current_clear:
+        return loan.save()

@@ -10,7 +10,7 @@ from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
     import get_bank_cash_account
-from gwi_customization.microfinance.api.loan import get_outstanding_principal
+from gwi_customization.microfinance.api.loan import update_recovery_status
 from gwi_customization.microfinance.api.interest \
     import allocate_interests, make_name
 from gwi_customization.microfinance.utils.fp import compose, update, join
@@ -64,12 +64,12 @@ class MicrofinanceRecovery(AccountsController):
 
     def on_submit(self):
         self.make_gl_entries()
-        self.update_loan_status()
+        update_recovery_status(self.loan, self.posting_date)
 
     def on_cancel(self):
         self.make_gl_entries(cancel=1)
         self.make_interests(cancel=1)
-        self.update_loan_status()
+        update_recovery_status(self.loan, self.posting_date)
 
     def get_gl_dict(self, args):
         gl_dict = frappe._dict({
@@ -165,25 +165,3 @@ class MicrofinanceRecovery(AccountsController):
                 ),
             ),
         )(self.periods)
-
-    def update_loan_status(self):
-        """Method update recovery_status of Loan"""
-        loan = frappe.get_doc('Microfinance Loan', self.loan)
-        outstanding_principal = get_outstanding_principal(
-            self.loan, posting_date=self.posting_date
-        )
-        current_status = loan.recovery_status
-        current_clear = loan.clear_date
-        if outstanding_principal == 0 \
-                and loan.disbursement_status == 'Fully Disbursed':
-            loan.clear_date = self.posting_date
-            loan.recovery_status = 'Repaid'
-        else:
-            loan.clear_date = None
-            if outstanding_principal == loan.loan_principal:
-                loan.recovery_status = 'Not Started'
-            else:
-                loan.recovery_status = 'In Progress'
-        if loan.recovery_status != current_status \
-                or loan.clear_date != current_clear:
-            return loan.save()
