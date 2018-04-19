@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice \
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.api.interest \
     import allocate_interests, make_name
-from gwi_customization.microfinance.utils.fp import compose, update
+from gwi_customization.microfinance.utils.fp import compose, update, join
 
 
 def _create_or_update_interest(opts, update=0):
@@ -31,6 +31,12 @@ def _create_or_update_interest(opts, update=0):
         doc.insert()
         doc.submit()
     return name
+
+
+_stringify_periods = compose(
+    join(', '),
+    partial(map, lambda x: x.period_label)
+)
 
 
 class MicrofinanceRecovery(AccountsController):
@@ -109,7 +115,9 @@ class MicrofinanceRecovery(AccountsController):
                 'account': self.payment_account,
                 'debit': self.total_interests,
                 'against': self.customer,
-                'remarks': 'Interest received',
+                'remarks': 'Interest received for {}'.format(
+                    _stringify_periods(self.periods)
+                ),
             })
         ]
 
@@ -130,6 +138,7 @@ class MicrofinanceRecovery(AccountsController):
                 'account': self.payment_account,
                 'debit': self.total_charges,
                 'against': self.customer,
+                'remarks': 'Payment received against service charges',
             })
         ]
 

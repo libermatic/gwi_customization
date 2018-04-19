@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 from functools import reduce
 import frappe
-from frappe.utils import flt, getdate
+from frappe.utils import flt, getdate, fmt_money
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
@@ -66,6 +66,14 @@ class MicrofinanceDisbursement(AccountsController):
         self.reload()
 
     def add_loan_gl_entries(self, gle=[]):
+        remarks = 'Loan disbursed' if self.total_disbursed > self.amount else \
+            'Opening for orginal {}'.format(
+                fmt_money(
+                    self.total_disbursed,
+                    precision=0,
+                    currency=frappe.defaults.get_user_default('currency'),
+                )
+            )
         return gle + [
             self.get_gl_dict({
                 'account': self.loan_account,
@@ -75,7 +83,7 @@ class MicrofinanceDisbursement(AccountsController):
                 'account': self.payment_account,
                 'credit': self.amount,
                 'against': self.customer,
-                'remarks': 'Loan disbursed',
+                'remarks': remarks,
             })
         ]
 
@@ -121,6 +129,7 @@ class MicrofinanceDisbursement(AccountsController):
                 'account': self.payment_account,
                 'debit': self.total_charges,
                 'against': self.customer,
+                'remarks': 'Payment received against service charges',
             })
         ]
 

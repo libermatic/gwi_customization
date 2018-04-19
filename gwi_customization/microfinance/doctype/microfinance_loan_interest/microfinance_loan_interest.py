@@ -74,6 +74,7 @@ class MicrofinanceLoanInterest(AccountsController):
                 'account': interest_income_account,
                 'credit': self.billed_amount,
                 'cost_center': cost_center,
+                'remarks': 'Interest for {}'.format(self.period),
             }),
         ]
         make_gl_entries(

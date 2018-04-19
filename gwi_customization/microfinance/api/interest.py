@@ -36,7 +36,7 @@ def _generate_periods(init_date, interest_amount):
     while True:
         end_date = get_last_day(start_date)
         yield {
-            'period_label': start_date.strftime('%b, %Y'),
+            'period_label': start_date.strftime('%b %Y'),
             'start_date': start_date,
             'end_date': end_date,
             'billed_amount': interest_amount,
