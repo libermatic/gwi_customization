@@ -37,6 +37,12 @@ def get_data():
                     "label": "Recovery",
                     "description": _("Loan payments received from customers"),
                 },
+                {
+                    "type": "doctype",
+                    "name": "Microfinance Write Off",
+                    "label": "Write Off",
+                    "description": _("Write offs to loan outstanding amounts"),
+                },
             ]
         },
         {

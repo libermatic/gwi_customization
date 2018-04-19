@@ -13,5 +13,9 @@ def get_data():
                 'label': _('Payments'),
                 'items': ['Microfinance Disbursement', 'Microfinance Recovery']
             },
+            {
+                'label': _('Transactions'),
+                'items': ['Microfinance Write Off']
+            },
         ]
     }
