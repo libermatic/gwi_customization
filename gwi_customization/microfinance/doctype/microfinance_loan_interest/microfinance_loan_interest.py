@@ -29,11 +29,23 @@ class MicrofinanceLoanInterest(AccountsController):
                 outstanding_principal, rate_of_interest, calculation_slab
             )
 
-    def on_update(self):
-        self.make_gl_entries(cancel=1)
+    def on_submit(self):
         self.make_gl_entries()
 
-    def on_trash(self):
+    def on_update_after_submit(self):
+        interest_income_account = frappe.get_value(
+            'Microfinance Loan', self.loan, 'interest_income_account'
+        )
+        gle_amount = frappe.get_value(
+            'GL Entry',
+            {'voucher_no': self.name, 'account': interest_income_account},
+            'credit'
+        )
+        if gle_amount != self.billed_amount:
+            self.make_gl_entries(cancel=1)
+            self.make_gl_entries()
+
+    def on_cancel(self):
         self.make_gl_entries(cancel=1)
 
     def get_gl_dict(self, args):

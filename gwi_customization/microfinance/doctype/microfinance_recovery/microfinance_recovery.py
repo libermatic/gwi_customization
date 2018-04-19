@@ -29,6 +29,7 @@ def _create_or_update_interest(opts, update=0):
         doc = frappe.new_doc('Microfinance Loan Interest')
         doc.update(opts)
         doc.insert()
+        doc.submit()
     return name
 
 

@@ -40,9 +40,9 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
             self.assertEquals(exp_gle[gle.account][3], gle.against)
             self.assertEquals(interest.loan, gle.against_voucher)
 
-    def test_update_on_gle(self):
+    def test_update_billed_amount_on_gle(self):
         interest = create_test_interest()
-        interest.billed_amount = 4000
+        interest.update({'billed_amount': 4000.0})
         interest.save()
         exp_gle = dict((d[0], d) for d in [
             ['Microfinance Loans - _TC', 4000, 0, None],
@@ -57,9 +57,25 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
             self.assertEquals(exp_gle[gle.account][3], gle.against)
             self.assertEquals(interest.loan, gle.against_voucher)
 
+    def test_update_paid_amount_on_gle(self):
+        interest = create_test_interest()
+        interest.update({'paid_amount': 4000.0})
+        interest.save()
+        exp_gle = dict((d[0], d) for d in [
+            ['Microfinance Loans - _TC', 5000, 0, None],
+            ['Interests on Loans - _TC', 0, 5000, None],
+        ])
+        gl_entries = get_interest_gle(interest.name)
+        for gle in gl_entries:
+            self.assertEquals(exp_gle[gle.account][0], gle.account)
+            self.assertEquals(exp_gle[gle.account][1], gle.debit)
+            self.assertEquals(exp_gle[gle.account][2], gle.credit)
+            self.assertEquals(exp_gle[gle.account][3], gle.against)
+            self.assertEquals(interest.loan, gle.against_voucher)
+
     def test_cancel_on_gle(self):
         interest = create_test_interest()
-        remove_test_interest()
+        interest.cancel()
         gl_entries = get_interest_gle(interest.name)
         self.assertEqual(len(gl_entries), 0)
 
@@ -86,6 +102,8 @@ def create_test_interest(**kwargs):
     })
     if not args.do_not_insert:
         doc.insert(ignore_if_duplicate=True)
+        if not args.do_not_submit:
+            doc.submit()
     return doc
 
 
