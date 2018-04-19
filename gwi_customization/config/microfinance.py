@@ -48,6 +48,12 @@ def get_data():
                     "name": "Microfinance Loan Summary",
                     "label": "Loan Summary",
                 },
+                {
+                    "type": "report",
+                    "is_query_report": True,
+                    "name": "Microfinance Account Statement",
+                    "label": "Account Statement",
+                },
             ]
         },
         {
