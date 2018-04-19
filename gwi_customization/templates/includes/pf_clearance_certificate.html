@@ -1,0 +1,94 @@
+<style>
+  .print-format h2 {
+    text-align: center;
+    font-size: 2em;
+    margin: 1.5em 0;
+  }
+
+  .print-format .cert-body p {
+    font-size: 1.2em;
+    line-height: 2;
+    margin-bottom: 1em;
+  }
+  .print-format .cert-signature {
+    margin-top: 8em;
+    font-size: 1.2em;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+  }
+  .print-format .cert-signature .cert-signature--left,
+  .print-format .cert-signature .cert-signature--right {
+    white-space: pre;
+  }
+  .print-format .cert-signature .cert-signature--right {
+    text-align: center;
+    margin-right: 2em;
+  }
+  .print-format .cert-no-clear {
+    font-size: 1.5em;
+    color: #b71c1c;
+    padding: .75em;
+    border: 1px solid #b71c1c;
+  }
+</style>
+
+{%- if doc.letter_head -%}
+  {{ frappe.db.get_value("Letter Head", doc.letter_head, "content") }}
+{%- endif -%}
+
+{% set loanee = frappe.db.get_value(
+  "Microfinance Loanee",
+  {"customer": doc.customer},
+  ["salutation", "customer_name", "gender", "department"],
+  as_dict=True,
+) %}
+
+{% set cleared = doc.recovery_status == 'Repaid' %}
+
+{% set title = _("Clearance Certificate") if cleared else _("Pending Loan")%}
+<h2>{{ title }}</h2>
+
+{% if not cleared %}
+<div class="cert-no-clear">
+  It seems Loan <strong>{{ doc.name }}</strong> for <strong>{{
+    loanee.get("salutation") or "" }} {{ loanee.get("customer_name")
+  }}</strong> has not been cleared yet.
+</div>
+{% endif %}
+
+<div class="cert-body">
+  <p>
+    This is to certify that <strong>{{
+      loanee.get("salutation") or "" }} {{ loanee.get("customer_name")
+    }}</strong>
+    {% if doc.__onload.get('address_text') %}
+      of <strong>{{ doc.__onload.get('address_text') }}</strong>
+    {% endif %}
+    {% if loanee.get("department") %}
+      in the department of <strong>{{ loanee.get("department") }}</strong>
+    {% endif %}
+    has liquidated
+    {% if loanee.get("gender") == "Male" %}
+      his
+    {% elif loanee.get("gender") == "Female" %}
+      her
+    {% else %}
+      its
+    {% endif %}
+    <strong>{{ doc.loan_plan }}</strong> loan dues on <strong>{{
+        frappe.utils.formatdate(doc.clear_date, "d MMMM, YYYY")
+        or "[Not cleared]"
+    }}</strong> that was sanctioned on <strong>{{
+      frappe.utils.formatdate(doc.posting_date, "d MMMM, YYYY")
+    }}</strong> (Ref Loan No. <strong>{{ doc.name }}</strong>).
+  </p>
+  <p>
+    So, <strong>{{ doc.company }}</strong> has no liabilities with <strong>{{
+      loanee.get("salutation") or "" }} {{ loanee.get("customer_name")
+    }}</strong>.
+  </p>
+  <p>
+    This is for your kind information and necessary process.
+  </p>
+</div>

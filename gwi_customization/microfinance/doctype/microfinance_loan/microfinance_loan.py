@@ -6,9 +6,31 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, get_last_day
+from frappe.contacts.doctype.address.address import get_default_address
+from gwi_customization.microfinance.utils.fp import join
+
+
+def _make_address_text(customer=None):
+    """Returns formatted address of Customer"""
+    if not customer:
+        return None
+    address = frappe.get_value(
+        'Address',
+        get_default_address('Customer', customer),
+        ['address_line1', 'city'],
+        as_dict=True
+    )
+    if not address:
+        return None
+    return join(', ')([address.get('address_line1'), address.get('city')])
 
 
 class MicrofinanceLoan(Document):
+    def onload(self):
+        self.set_onload(
+            'address_text', _make_address_text(self.customer)
+        )
+
     def before_save(self):
         # set Loan Plan values
         rate_of_interest, rate_of_late_charges, calculation_slab = \
