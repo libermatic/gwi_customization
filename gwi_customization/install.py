@@ -13,6 +13,10 @@ settings_accounts = {
         'account_type': 'Income Account',
         'parent_account': 'Direct Income',
     },
+    'write_off_account': {
+        'account_name': 'Write Off',
+        'parent_account': 'Indirect Expenses',
+    },
 }
 
 

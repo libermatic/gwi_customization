@@ -15,5 +15,11 @@ frappe.ui.form.on('Microfinance Loan Settings', {
         is_group: false,
       },
     });
+    frm.fields_dict['write_off_account'].get_query = doc => ({
+      filters: {
+        root_type: 'Expense',
+        is_group: false,
+      },
+    });
   },
 });
