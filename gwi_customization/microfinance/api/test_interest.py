@@ -50,7 +50,7 @@ class TestInterest(unittest.TestCase):
             period = periods.next()
             count += 1
         self.assertEqual(count, 4)
-        self.assertEqual(period.get('period_label'), 'Nov, 2017')
+        self.assertEqual(period.get('period_label'), 'Nov 2017')
         self.assertEqual(period.get('start_date'), getdate('2017-11-01'))
         self.assertEqual(period.get('end_date'), getdate('2017-11-30'))
         self.assertEqual(period.get('billed_amount'), 3000.0)

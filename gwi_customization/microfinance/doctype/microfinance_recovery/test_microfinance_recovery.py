@@ -51,7 +51,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
         to_check = {
             'loan': '_Test Loan 1',
             'posting_date': getdate('2017-09-17'),
-            'period': 'Aug, 2017',
+            'period': 'Aug 2017',
             'start_date': getdate('2017-08-19'),
             'end_date': getdate('2017-08-31'),
             'billed_amount': 10000,
@@ -89,7 +89,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
         to_check = {
             'loan': '_Test Loan 1',
             'posting_date': getdate('2017-09-17'),
-            'period': 'Sep, 2017',
+            'period': 'Sep 2017',
             'start_date': getdate('2017-09-01'),
             'end_date': getdate('2017-09-30'),
             'billed_amount': 10000,
