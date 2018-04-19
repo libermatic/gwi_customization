@@ -54,6 +54,7 @@ class MicrofinanceDisbursement(AccountsController):
         return super(MicrofinanceDisbursement, self).get_gl_dict(gl_dict)
 
     def make_gl_entries(self, cancel=0, adv_adj=0):
+        self.is_opening = 'Yes' if self.is_opening else 'No'
         gl_entries = self.add_loan_gl_entries()
         if self.is_opening:
             gl_entries = self.add_opening_gl_entries(gl_entries)
@@ -62,6 +63,7 @@ class MicrofinanceDisbursement(AccountsController):
         make_gl_entries(
             gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
         )
+        self.reload()
 
     def add_loan_gl_entries(self, gle=[]):
         return gle + [
