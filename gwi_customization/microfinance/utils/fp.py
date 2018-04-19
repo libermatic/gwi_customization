@@ -17,3 +17,9 @@ def update(kv_dict):
         new_item.update(kv_dict)
         return new_item
     return fn
+
+
+def join(sep):
+    def fn(items):
+        return sep.join(items)
+    return fn
