@@ -5,7 +5,8 @@
 from __future__ import unicode_literals
 import math
 import frappe
-from frappe.utils import flt
+from frappe.utils import flt, getdate
+from dateutil.relativedelta import relativedelta
 
 
 def get_gle_by(voucher_type):
@@ -42,3 +43,9 @@ def calc_interest(amount, rate=0.0, slab=0.0):
     if slab:
         return (math.ceil(flt(amount) / slab) * slab) * rate / 100.0
     return amount * flt(rate) / 100.0
+
+
+def month_diff(d1, d2):
+    """Return d1 - d2 in months without the days portion"""
+    r = relativedelta(getdate(d1), getdate(d2))
+    return r.years * 12 + r.months
