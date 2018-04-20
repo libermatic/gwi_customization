@@ -4,8 +4,10 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import getdate
-from gwi_customization.microfinance.utils.fp import join
+from frappe.utils import getdate, get_last_day, add_months, flt, rounded
+from functools import partial
+from gwi_customization.microfinance.utils.fp import join, compose
+from gwi_customization.microfinance.utils import month_diff, calc_interest
 
 
 @frappe.whitelist()
@@ -114,3 +116,45 @@ def update_recovery_status(loan_name, posting_date):
     if loan.recovery_status != current_status \
             or loan.clear_date != current_clear:
         return loan.save()
+
+
+@frappe.whitelist()
+def calculate_principal(income, loan_plan, end_date, execution_date):
+    """
+        Return a dict containing the maximum allowed principal along with the
+        duration and monthly installment.
+
+        :param income: Renumeration received by the Customer
+        :param loan_plan: Name of a Loan Plan
+        :param end_date: Maximum date on which the loan could end
+        :param execution_date: Date on which the loan would start
+    """
+    plan = frappe.get_doc('Microfinance Loan Plan', loan_plan)
+    if not plan.income_multiple or not plan.max_duration:
+        frappe.throw('Missing values in Loan Plan', ValueError)
+
+    recovery_amount = flt(income) * plan.income_multiple / plan.max_duration
+
+    duration = plan.max_duration if plan.force_max_duration else min(
+        plan.max_duration,
+        compose(
+            partial(month_diff, end_date), get_last_day
+        )(execution_date),
+    )
+
+    expected_eta = compose(
+        partial(add_months, months=duration), get_last_day
+    )(execution_date)
+
+    principal = recovery_amount * duration
+    initial_interest = calc_interest(
+        principal, plan.rate_of_interest, plan.calculation_slab
+    )
+
+    return {
+        'principal': rounded(principal, 2),
+        'expected_eta': expected_eta,
+        'duration': duration,
+        'recovery_amount': rounded(recovery_amount, 2),
+        'initial_interest': rounded(initial_interest, 2),
+    }
