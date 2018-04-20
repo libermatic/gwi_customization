@@ -16,8 +16,8 @@ app_license = 'MIT'
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/gwi_customization/css/gwi_customization.css"
-# app_include_js = "/assets/gwi_customization/js/gwi_customization.js"
+app_include_css = "/assets/css/gwi_customization.css"
+app_include_js = "/assets/js/gwi_customization.min.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/gwi_customization/css/gwi_customization.css"

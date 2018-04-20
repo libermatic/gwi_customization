@@ -95,6 +95,12 @@ def get_data():
         },
         {
             "label": _("Tools"),
-            "items": []
+            "items": [
+                {
+                    "type": "page",
+                    "name": "calculate_principal",
+                    "label": _("Calculate Principal and Interest")
+                },
+            ]
         },
     ]

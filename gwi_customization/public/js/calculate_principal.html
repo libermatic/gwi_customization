@@ -1,0 +1,38 @@
+<dl class="gwi-calculate_principal">
+  <div class="gwi-calculate_principal-main">
+    <dt>Max Principal</dt>
+    <dd>
+      {{ format_currency(
+        principal, frappe.defaults.get_default("currency"), 2
+      ) }}
+    </dd>
+  </div>
+  <div>
+    <dt>Expected End Date</dt>
+    <dd>
+      {{ expected_eta ? frappe.datetime.str_to_user(expected_eta) : "NA" }}
+    </dd>
+  </div>
+  <div>
+    <dt>Capital Recovery Amount</dt>
+    <dd>
+      {{ recovery_amount
+        ? format_currency(
+          recovery_amount, frappe.defaults.get_default("currency"), 2
+        )
+        : "NA"
+      }}
+    </dd>
+  </div>
+  <div>
+    <dt>Initial Interest</dt>
+    <dd>
+      {{ initial_interest
+        ? format_currency(
+          initial_interest, frappe.defaults.get_default("currency"), 2
+        )
+        : "NA"
+      }}
+    </dd>
+  </div>
+</dl>

@@ -1,0 +1,23 @@
+{
+ "content": null, 
+ "creation": "2018-04-20 20:56:38.471470", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "idx": 0, 
+ "modified": "2018-04-20 20:56:52.775004", 
+ "modified_by": "Administrator", 
+ "module": "Microfinance", 
+ "name": "calculate_principal", 
+ "owner": "Administrator", 
+ "page_name": "calculate_principal", 
+ "roles": [
+  {
+   "role": "Loan Manager"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "system_page": 0, 
+ "title": "Calculate Principal and Interests"
+}
