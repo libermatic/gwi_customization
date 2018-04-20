@@ -60,6 +60,12 @@ def get_data():
                     "name": "Microfinance Account Statement",
                     "label": "Account Statement",
                 },
+                {
+                    "type": "report",
+                    "is_query_report": True,
+                    "name": "Microfinance Asset Health",
+                    "label": "Asset Health",
+                },
             ]
         },
         {
