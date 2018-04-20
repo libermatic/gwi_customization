@@ -1,0 +1,28 @@
+.gwi-calculate_principal {
+  border: 1px solid #d1d8dd;
+  border-radius: 3px;
+  background-color: #fafbfc;
+  display: flex;
+  flex-flow: column wrap;
+  padding: 8px;
+  margin: 15px 15px;
+}
+@media (min-width: 768px) {
+  .gwi-calculate_principal {
+    max-height: 120px;
+    margin: 15px 30px;
+  }
+}
+.gwi-calculate_principal > div {
+  margin: 8px;
+}
+.gwi-calculate_principal dt {
+  font-variant: all-small-caps;
+  font-weight: normal;
+}
+.gwi-calculate_principal dd {
+  font-weight: bold;
+}
+.gwi-calculate_principal > div:first-of-type dd {
+  font-size: 1.6em;
+}

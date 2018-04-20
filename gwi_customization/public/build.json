@@ -1,0 +1,4 @@
+{
+  "css/gwi_customization.css": ["public/css/calculate_principal.css"],
+  "js/gwi_customization.min.js": ["public/js/calculate_principal.html"]
+}
