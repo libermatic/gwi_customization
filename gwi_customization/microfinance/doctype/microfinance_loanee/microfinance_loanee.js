@@ -6,7 +6,7 @@ frappe.ui.form.on('Microfinance Loanee', {
     if (!frm.doc.__islocal) {
       if (frm.fields_dict['address_html'] && 'addr_list' in frm.doc.__onload) {
         $(frm.fields_dict['address_html'].wrapper)
-          .html(frappe.render_template('address_list', cur_frm.doc.__onload))
+          .html(frappe.render_template('address_list', frm.doc.__onload))
           .find('.btn-address')
           .on('click', function() {
             frappe.dynamic_link = {
