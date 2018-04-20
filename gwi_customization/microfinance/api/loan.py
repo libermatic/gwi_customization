@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.utils import getdate
+from gwi_customization.microfinance.utils.fp import join
 
 
 @frappe.whitelist()
@@ -52,6 +53,44 @@ def get_outstanding_principal(loan, posting_date=None):
         """.format(" AND ".join(cond))
     )[0][0] or 0
     return outstanding
+
+
+def get_chart_data(loan_name):
+    outstanding = get_outstanding_principal(loan_name)
+    undisbursed = get_undisbursed_principal(loan_name)
+
+    write_off_account = frappe.get_value(
+        'Microfinance Loan Settings', None, 'write_off_account'
+    )
+    conds = [
+        "account = '{}'".format(write_off_account),
+        "against_voucher = '{}'".format(loan_name),
+    ]
+    wrote_off = frappe.db.sql(
+        """
+            SELECT SUM(debit - credit) FROM `tabGL Entry` WHERE {conds}
+        """.format(
+            conds=join(" AND ")(conds)
+        )
+    )[0][0] or 0
+
+    sanctioned = frappe.get_value(
+        'Microfinance Loan', loan_name, 'loan_principal'
+    )
+    recovered = (sanctioned - undisbursed) - (outstanding + wrote_off)
+
+    data = {
+        'labels': [
+            'Recovered', 'Outstanding', 'Undisbursed', 'Wrote Off'
+        ],
+        'datasets': [
+            {
+                'title': "Total",
+                'values': [recovered, outstanding, undisbursed, wrote_off]
+            },
+        ]
+    }
+    return data
 
 
 def update_recovery_status(loan_name, posting_date):

@@ -8,6 +8,7 @@ from frappe.model.document import Document
 from frappe.utils import add_days, get_last_day
 from frappe.contacts.doctype.address.address import get_default_address
 from gwi_customization.microfinance.utils.fp import join
+from gwi_customization.microfinance.api.loan import get_chart_data
 
 
 def _make_address_text(customer=None):
@@ -30,6 +31,10 @@ class MicrofinanceLoan(Document):
         self.set_onload(
             'address_text', _make_address_text(self.customer)
         )
+        if self.docstatus == 1:
+            self.set_onload(
+                'chart_data', get_chart_data(self.name)
+            )
 
     def before_save(self):
         # set Loan Plan values

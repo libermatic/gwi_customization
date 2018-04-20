@@ -32,6 +32,33 @@ frappe.ui.form.on('Microfinance Loan', {
     if (frm.doc.docstatus > 0) {
       frm.set_df_property('loan_principal', 'read_only', 1);
       frm.set_df_property('recovery_amount', 'read_only', 1);
+      frm.page.add_menu_item(__('Account Statement'), function(e) {
+        frappe.set_route('query-report', 'Microfinance Account Statement', {
+          loan: frm.doc['name'],
+        });
+      });
     }
+  },
+  onload: function(frm) {
+    if (frm.doc.docstatus === 1) {
+      frm.trigger('render_chart');
+    }
+  },
+  render_chart: function(frm) {
+    const chart_area = frm.$wrapper.find('.form-graph');
+    chart_area.empty();
+    const chart = new Chart({
+      parent: chart_area[0],
+      type: 'percentage',
+      data: frm.doc.__onload['chart_data'],
+      colors: ['green', 'orange', 'blue', 'grey'],
+    });
+    chart_area.removeClass('hidden');
+    $(chart.container)
+      .find('.title')
+      .addClass('hidden');
+    $(chart.container)
+      .find('.sub-title')
+      .addClass('hidden');
   },
 });
