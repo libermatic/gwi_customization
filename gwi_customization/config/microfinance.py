@@ -101,6 +101,11 @@ def get_data():
                     "name": "calculate_principal",
                     "label": _("Calculate Principal and Interest")
                 },
+                {
+                    "type": "page",
+                    "name": "interest_tool",
+                    "label": _("Interests and Charges")
+                },
             ]
         },
     ]

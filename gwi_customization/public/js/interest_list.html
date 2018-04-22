@@ -1,0 +1,50 @@
+<table class="table">
+  <thead>
+    <th>Period</th>
+    <th>Posting Date</th>
+    <th>Status</th>
+    <th class="text-right">Amount</th>
+    <th class="text-right">Outstanding</th>
+    <th class="text-right">Late Fine</th>
+    <th />
+  </thead>
+  <tbody>
+    {% for (let i = 0; i < data.length; i++) { %}
+    <tr>
+      <td>{{ data[i]["period"] }}</td>
+      <td>{{ frappe.datetime.str_to_user(data[i]["posting_date"]) }}</td>
+      <td>{{ data[i]["status"] }}</td>
+      <td class="text-right">
+        {{ format_currency(
+          data[i]["billed_amount"],
+          frappe.defaults.get_default("currency"),
+          2
+        ) }}
+      </td>
+      <td class="text-right">
+        {{ format_currency(
+          data[i]["outstanding_amount"],
+          frappe.defaults.get_default("currency"),
+          2
+        ) }}
+      </td>
+      <td class="text-right">
+        {{ format_currency(
+          data[i]["fine_amount"],
+          frappe.defaults.get_default("currency"),
+          2
+        ) }}
+      </td>
+      <td class="text-center">
+        <button
+          type="button"
+          class="btn btn-xs {{ data[i].btn_type }}"
+          name="{{ data[i].name }}"
+        >
+          {{ data[i]["btn_label"] }}
+        </button>
+      </td>
+    </tr>
+    {% } %}
+  </tbody>
+</table>
