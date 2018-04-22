@@ -42,7 +42,7 @@ frappe.pages['calculate_principal'].on_page_load = function(wrapper) {
     }
   });
   page.set_secondary_action('Reset', function() {
-    rh.empty();
+    rh.empty().addClass('hidden');
     fg.set_values({ income: null, end_date: null, loan_plan: null });
   });
   frappe.breadcrumbs.add('Microfinance');
