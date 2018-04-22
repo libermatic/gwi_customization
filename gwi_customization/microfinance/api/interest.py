@@ -4,9 +4,12 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import flt, add_days, get_last_day, getdate, formatdate
+from frappe.utils \
+    import flt, add_days, add_months, get_last_day, getdate, formatdate
+from functools import partial
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.utils import calc_interest
+from gwi_customization.microfinance.utils.fp import update, join, compose
 
 
 def _interest_to_period(interest):
@@ -122,3 +125,63 @@ def get_current_interest(loan, posting_date):
 
 def make_name(loan, start_date):
     return loan + '/' + formatdate(start_date, 'YYYY-MM')
+
+
+def _make_list_item(row):
+    outstanding_amount = row.billed_amount - row.paid_amount
+    if outstanding_amount > 0:
+        status = 'Pending'
+    else:
+        status = 'Complete'
+    return update({
+        'outstanding_amount': outstanding_amount,
+        'status': status,
+    })(row)
+
+
+def _gen_dates(from_date, to_date):
+    current_date = getdate(from_date)
+    while current_date <= getdate(to_date):
+        yield current_date
+        current_date = add_months(current_date, 1)
+
+
+@frappe.whitelist()
+def list(loan, from_date, to_date):
+    if getdate(to_date) < getdate(from_date):
+        return frappe.throw('To date cannot be less than From date')
+
+    conds = [
+        "loan = '{}'".format(loan),
+        "docstatus = 1",
+        "start_date BETWEEN '{}' AND '{}'".format(from_date, to_date),
+    ]
+    existing = frappe.db.sql(
+        """
+            SELECT name, period, posting_date, billed_amount, paid_amount
+            FROM `tabMicrofinance Loan Interest` WHERE {conds}
+        """.format(
+            conds=join(" AND ")(conds)
+        ),
+        as_dict=True,
+    )
+    existing_dict = dict((row.name, row) for row in existing)
+
+    get_item = compose(existing_dict.get, partial(make_name, loan))
+    make_item = compose(_make_list_item, get_item)
+
+    def make_empty(d):
+        return {
+            'name': make_name(loan, d),
+            'period': d.strftime('%b %Y'),
+            'status': 'Not Created'
+        }
+
+    loan_date = frappe.get_value('Microfinance Loan', loan, 'posting_date')
+    dates = compose(
+        partial(_gen_dates, to_date=to_date), partial(max, loan_date), getdate,
+    )(from_date)
+
+    return map(
+        lambda x: make_item(x) if get_item(x) else make_empty(x), dates
+    )
