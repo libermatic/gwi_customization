@@ -129,7 +129,9 @@ def make_name(loan, start_date):
 
 def _make_list_item(row):
     outstanding_amount = row.billed_amount - row.paid_amount
-    if outstanding_amount > 0:
+    if outstanding_amount == row.billed_amount:
+        status = 'Billed'
+    elif outstanding_amount > 0:
         status = 'Pending'
     else:
         status = 'Complete'
@@ -158,7 +160,10 @@ def list(loan, from_date, to_date):
     ]
     existing = frappe.db.sql(
         """
-            SELECT name, period, posting_date, billed_amount, paid_amount
+            SELECT
+                name,
+                period, posting_date, start_date,
+                billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest` WHERE {conds}
         """.format(
             conds=join(" AND ")(conds)
@@ -169,15 +174,16 @@ def list(loan, from_date, to_date):
 
     get_item = compose(existing_dict.get, partial(make_name, loan))
     make_item = compose(_make_list_item, get_item)
+    loan_date = frappe.get_value('Microfinance Loan', loan, 'posting_date')
 
     def make_empty(d):
         return {
             'name': make_name(loan, d),
             'period': d.strftime('%b %Y'),
-            'status': 'Not Created'
+            'start_date': max(loan_date, d),
+            'status': 'Unbilled'
         }
 
-    loan_date = frappe.get_value('Microfinance Loan', loan, 'posting_date')
     dates = compose(
         partial(_gen_dates, to_date=to_date), partial(max, loan_date), getdate,
     )(from_date)
