@@ -191,3 +191,46 @@ def list(loan, from_date, to_date):
     return map(
         lambda x: make_item(x) if get_item(x) else make_empty(x), dates
     )
+
+
+@frappe.whitelist()
+def create(loan, period, start_date, billed_amount=None):
+    prev = compose(
+        partial(frappe.db.exists, 'Microfinance Loan Interest'),
+        partial(make_name, loan),
+        getdate,
+        partial(add_months, months=-1),
+    )(start_date)
+    if not prev:
+        return frappe.throw('Interest for previous interval does not exists')
+    end_date = compose(get_last_day, getdate)(start_date)
+    interest = frappe.get_doc({
+        'doctype': 'Microfinance Loan Interest',
+        'loan': loan,
+        'posting_date': add_days(end_date, 1),
+        'period': period,
+        'start_date': getdate(start_date),
+        'end_date': end_date,
+        'billed_amount': billed_amount,
+    })
+    interest.insert()
+    interest.submit()
+    return interest
+
+
+@frappe.whitelist()
+def edit(name, billed_amount):
+    interest = frappe.get_doc('Microfinance Loan Interest', name)
+    if interest.paid_amount:
+        return frappe.throw('Period already has amount paid')
+    next = compose(
+        partial(frappe.db.exists, 'Microfinance Loan Interest'),
+        partial(make_name, interest.loan),
+        getdate,
+        partial(add_months, months=1),
+    )(interest.start_date)
+    if next:
+        return frappe.throw('Interest for next interval already exists')
+    interest.update({'billed_amount': billed_amount})
+    interest.save()
+    return interest
