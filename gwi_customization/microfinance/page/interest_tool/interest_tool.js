@@ -34,31 +34,85 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   fg.make();
   const rh = $(fg.fields_dict['result_html'].wrapper);
   rh.css('overflow', 'auto').addClass('hidden');
-  page.set_primary_action('Get Entries', async function() {
+  async function get_interests() {
     const values = fg.get_values();
-    console.log(values);
     if (values) {
+      rh.empty().addClass('hidden');
       const { message: data } = await frappe.call({
         method: 'gwi_customization.microfinance.api.interest.list',
         args: values,
       });
-      rh.removeClass('hidden').html(
-        frappe.render_template('interest_list', {
-          data: data.map(x => ({
-            ...x,
-            btn_label: x.status === 'Not Created' ? 'Make' : 'Edit',
-            btn_type:
-              x.status === 'Not Created' ? 'btn-default' : 'btn-warning',
-          })),
-        })
-      );
+      console.log(data);
+      rh
+        .removeClass('hidden')
+        .html(frappe.render_template('interest_list', { data }));
+      data.forEach(({ name, status }) => {
+        const btn = rh.find(`button[name='${name}']`);
+        if (status == 'Unbilled') {
+          btn.addClass('btn-info').text('Make');
+        } else if (status == 'Billed') {
+          btn.addClass('btn-warning').text('Edit');
+        } else {
+          btn.addClass('disabled').text('None');
+        }
+      });
       rh.find('button').click(e => {
-        console.log(e.target.name);
+        const { name, period, start_date, billed_amount, status } =
+          data.find(({ name }) => name === e.target.name) || {};
+        if (status === 'Unbilled') {
+          dialog.set_title(`Create Interest for ${period}`);
+        } else {
+          dialog.set_title(`Edit Interest for ${period}`);
+        }
+        dialog.set_values({ name, period, start_date, billed_amount, status });
+        dialog.show();
       });
     }
-  });
+  }
+  page.set_primary_action('Get Entries', get_interests);
   page.set_secondary_action('Clear', function() {
     rh.empty().addClass('hidden');
     fg.set_values({ loan: null });
+  });
+  const dialog = new frappe.ui.Dialog({
+    fields: [
+      {
+        label: 'Amount',
+        fieldname: 'billed_amount',
+        fieldtype: 'Currency',
+        description: 'Leave blank to calculate automagically',
+      },
+      {
+        fieldname: 'name',
+        fieldtype: 'Link',
+        options: 'Microfinance Loan Interest',
+        hidden: 1,
+      },
+      { fieldname: 'period', fieldtype: 'Data', hidden: 1 },
+      { fieldname: 'start_date', fieldtype: 'Data', hidden: 1 },
+      { fieldname: 'status', fieldtype: 'Data', hidden: 1 },
+    ],
+  });
+  dialog.set_primary_action('Submit', async function({
+    name,
+    period,
+    start_date,
+    billed_amount,
+    status,
+  }) {
+    if (status === 'Unbilled') {
+      const loan = fg.get_value('loan');
+      await frappe.call({
+        method: 'gwi_customization.microfinance.api.interest.create',
+        args: { loan, period, start_date, billed_amount },
+      });
+    } else {
+      await frappe.call({
+        method: 'gwi_customization.microfinance.api.interest.edit',
+        args: { name, billed_amount },
+      });
+    }
+    dialog.hide();
+    get_interests();
   });
 };
