@@ -153,7 +153,7 @@ def list(loan, from_date, to_date):
     existing = frappe.db.sql(
         """
             SELECT
-                name,
+                name, status,
                 period, posting_date, start_date,
                 billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest` WHERE {conds}
@@ -187,6 +187,8 @@ def list(loan, from_date, to_date):
 
 @frappe.whitelist()
 def create(loan, period, start_date, billed_amount=None):
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
     prev = compose(
         partial(frappe.db.exists, 'Microfinance Loan Interest'),
         partial(make_name, loan),
@@ -212,9 +214,9 @@ def create(loan, period, start_date, billed_amount=None):
 
 @frappe.whitelist()
 def edit(name, billed_amount):
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
-    if interest.paid_amount:
-        return frappe.throw('Period already has amount paid')
     next = compose(
         partial(frappe.db.exists, 'Microfinance Loan Interest'),
         partial(make_name, interest.loan),
