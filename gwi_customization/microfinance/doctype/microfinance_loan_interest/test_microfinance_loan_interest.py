@@ -25,6 +25,15 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
         self.assertEqual(interest.name, '_Test Loan 1/2017-08')
         self.assertEqual(interest.billed_amount, 5000.0)
 
+    def test_statuses(self):
+        interest = create_test_interest(billed_amount=10000.0)
+        self.assertEqual(interest.status, 'Billed')
+        interest.update({'paid_amount': 5000.0})
+        interest.save()
+        self.assertEqual(interest.status, 'Pending')
+        interest.update({'paid_amount': 10000.0})
+        interest.save()
+        self.assertEqual(interest.status, 'Clear')
     def test_gle(self):
         interest = create_test_interest()
         exp_gle = dict((d[0], d) for d in [

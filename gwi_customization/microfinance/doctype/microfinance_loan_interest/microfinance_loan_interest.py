@@ -29,10 +29,14 @@ class MicrofinanceLoanInterest(AccountsController):
                 outstanding_principal, rate_of_interest, calculation_slab
             )
 
+    def on_update(self):
+        self.update_status()
+
     def on_submit(self):
         self.make_gl_entries()
 
     def on_update_after_submit(self):
+        self.update_status()
         interest_income_account = frappe.get_value(
             'Microfinance Loan', self.loan, 'interest_income_account'
         )
@@ -80,3 +84,16 @@ class MicrofinanceLoanInterest(AccountsController):
         make_gl_entries(
             gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
         )
+
+    def update_status(self, is_fined=False):
+        current_status = self.status
+        if is_fined:
+            self.status = 'Fined'
+        elif not self.paid_amount:
+            self.status = 'Billed'
+        elif self.paid_amount < self.billed_amount:
+            self.status = 'Pending'
+        elif self.paid_amount == self.billed_amount:
+            self.status = 'Clear'
+        if current_status != self.status:
+            self.save()
