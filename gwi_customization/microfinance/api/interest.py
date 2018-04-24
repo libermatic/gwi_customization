@@ -128,16 +128,8 @@ def make_name(loan, start_date):
 
 
 def _make_list_item(row):
-    outstanding_amount = row.billed_amount - row.paid_amount
-    if outstanding_amount == row.billed_amount:
-        status = 'Billed'
-    elif outstanding_amount > 0:
-        status = 'Pending'
-    else:
-        status = 'Complete'
     return update({
-        'outstanding_amount': outstanding_amount,
-        'status': status,
+        'outstanding_amount': row.billed_amount - row.paid_amount,
     })(row)
 
 
@@ -231,6 +223,6 @@ def edit(name, billed_amount):
     )(interest.start_date)
     if next:
         return frappe.throw('Interest for next interval already exists')
-    interest.update({'billed_amount': billed_amount})
+    interest.run_method('update_billed_amount', 4000.0)
     interest.save()
     return interest

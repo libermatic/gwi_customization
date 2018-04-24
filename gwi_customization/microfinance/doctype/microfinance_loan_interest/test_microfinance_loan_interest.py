@@ -34,6 +34,19 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
         interest.update({'paid_amount': 10000.0})
         interest.save()
         self.assertEqual(interest.status, 'Clear')
+
+    def test_update_billed_amount(self):
+        interest = create_test_interest()
+        interest.run_method('update_billed_amount', 4000.0)
+        self.assertEqual(interest.billed_amount, 4000.0)
+
+    def test_update_billed_amount_raises(self):
+        interest = create_test_interest()
+        interest.update({'paid_amount': 4000.0})
+        interest.save()
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            interest.run_method('update_billed_amount', 4000.0)
+
     def test_gle(self):
         interest = create_test_interest()
         exp_gle = dict((d[0], d) for d in [
@@ -51,11 +64,10 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
 
     def test_update_billed_amount_on_gle(self):
         interest = create_test_interest()
-        interest.update({'billed_amount': 4000.0})
-        interest.save()
+        interest.run_method('update_billed_amount', 4000.0)
         exp_gle = dict((d[0], d) for d in [
-            ['Microfinance Loans - _TC', 4000, 0, None],
-            ['Interests on Loans - _TC', 0, 4000, None],
+            ['Microfinance Loans - _TC', 5000, 1000, None],
+            ['Interests on Loans - _TC', 1000, 5000, None],
         ])
         gl_entries = get_interest_gle(interest.name)
         self.assertEqual(len(gl_entries), 2)
@@ -108,6 +120,7 @@ def create_test_interest(**kwargs):
         'posting_date': args.posting_date or '2017-09-17',
         'start_date': args.start_date or '2017-08-19',
         'end_date': args.start_date or '2017-08-31',
+        'billed_amount': args.billed_amount,
     })
     if not args.do_not_insert:
         doc.insert(ignore_if_duplicate=True)
