@@ -29,14 +29,11 @@ class MicrofinanceLoanInterest(AccountsController):
                 outstanding_principal, rate_of_interest, calculation_slab
             )
 
-    def on_update(self):
-        self.update_status()
+    def before_submit(self):
+        self.update({'status': self.get_status()})
 
     def on_submit(self):
         self.make_gl_entries()
-
-    def on_update_after_submit(self):
-        self.update_status()
 
     def update_billed_amount(self, billed_amount):
         if self.paid_amount:
@@ -66,6 +63,13 @@ class MicrofinanceLoanInterest(AccountsController):
                 self.add_interest_gl_entries(self.billed_amount - cur_billed),
                 merge_entries=False
             )
+
+    def update_paid_amount(self, amount):
+        if amount > self.billed_amount:
+            return frappe.throw('Paid amount cannot exceed billed amount')
+        self.update({'paid_amount': amount})
+        self.update({'status': self.get_status()})
+        self.save()
 
     def on_cancel(self):
         self.make_gl_entries(cancel=1)
@@ -109,15 +113,12 @@ class MicrofinanceLoanInterest(AccountsController):
             }),
         ]
 
-    def update_status(self, is_fined=False):
-        current_status = self.status
+    def get_status(self, is_fined=False):
         if is_fined:
-            self.status = 'Fined'
-        elif not self.paid_amount:
-            self.status = 'Billed'
-        elif self.paid_amount < self.billed_amount:
-            self.status = 'Pending'
-        elif self.paid_amount == self.billed_amount:
-            self.status = 'Clear'
-        if current_status != self.status:
-            self.save()
+            return 'Fined'
+        if not self.paid_amount:
+            return 'Billed'
+        if self.paid_amount < self.billed_amount:
+            return 'Pending'
+        if self.paid_amount == self.billed_amount:
+            return 'Clear'

@@ -28,11 +28,9 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
     def test_statuses(self):
         interest = create_test_interest(billed_amount=10000.0)
         self.assertEqual(interest.status, 'Billed')
-        interest.update({'paid_amount': 5000.0})
-        interest.save()
+        interest.run_method('update_paid_amount', 5000.0)
         self.assertEqual(interest.status, 'Pending')
-        interest.update({'paid_amount': 10000.0})
-        interest.save()
+        interest.run_method('update_paid_amount', 10000.0)
         self.assertEqual(interest.status, 'Clear')
 
     def test_update_billed_amount(self):
@@ -46,6 +44,16 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
         interest.save()
         with self.assertRaises(frappe.exceptions.ValidationError):
             interest.run_method('update_billed_amount', 4000.0)
+
+    def test_update_paid_amount(self):
+        interest = create_test_interest()
+        interest.run_method('update_paid_amount', 4000.0)
+        self.assertEqual(interest.paid_amount, 4000.0)
+
+    def test_update_paid_amount_raises(self):
+        interest = create_test_interest(billed_amount=10000.0)
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            interest.run_method('update_paid_amount', 11000.0)
 
     def test_gle(self):
         interest = create_test_interest()
@@ -80,8 +88,7 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
 
     def test_update_paid_amount_on_gle(self):
         interest = create_test_interest()
-        interest.update({'paid_amount': 4000.0})
-        interest.save()
+        interest.run_method('update_paid_amount', 4000.0)
         exp_gle = dict((d[0], d) for d in [
             ['Microfinance Loans - _TC', 5000, 0, None],
             ['Interests on Loans - _TC', 0, 5000, None],
