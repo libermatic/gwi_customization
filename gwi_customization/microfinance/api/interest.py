@@ -155,7 +155,7 @@ def list(loan, from_date, to_date):
             SELECT
                 name, status,
                 period, posting_date, start_date,
-                billed_amount, paid_amount
+                billed_amount, paid_amount, fine_amount
             FROM `tabMicrofinance Loan Interest` WHERE {conds}
         """.format(
             conds=join(" AND ")(conds)

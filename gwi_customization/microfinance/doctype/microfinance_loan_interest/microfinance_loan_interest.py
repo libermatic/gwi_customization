@@ -4,8 +4,9 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.utils import add_months
 from erpnext.controllers.accounts_controller import AccountsController
-from erpnext.accounts.general_ledger import make_gl_entries
+from erpnext.accounts.general_ledger import make_gl_entries, delete_gl_entries
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.api.interest import make_name
 from gwi_customization.microfinance.utils import calc_interest
@@ -30,16 +31,32 @@ class MicrofinanceLoanInterest(AccountsController):
             )
 
     def before_submit(self):
-        self.update({'status': self.get_status()})
+        self.update_status()
 
     def on_submit(self):
         self.make_gl_entries()
 
-    def update_billed_amount(self, billed_amount):
-        if self.paid_amount:
-            return frappe.throw('Period already has amount paid')
+    def before_update_after_submit(self):
+        before = self.get_doc_before_save()
+        if self.billed_amount and self.billed_amount != before.billed_amount:
+            if self.paid_amount:
+                frappe.throw('Period already has amount paid')
+            if self.fine_amount:
+                frappe.throw('Period already has been fined')
+        if self.paid_amount and self.paid_amount != before.paid_amount:
+            if self.paid_amount > self.billed_amount:
+                frappe.throw('Paid amount cannot exceed billed amount')
+            if self.fine_amount:
+                frappe.throw('Period already has been fined')
+        if self.fine_amount and self.fine_amount != before.fine_amount:
+            if self.paid_amount == self.billed_amount:
+                frappe.throw('No unpaid amount to make late charges')
+            if before.fine_amount:
+                frappe.throw('Period already has been fined')
+        self.update_status()
 
-        self.update({'billed_amount': billed_amount})
+    def update_billed_amount(self, amount):
+        self.billed_amount = amount
         self.save()
 
         interest_income_account = frappe.get_value(
@@ -56,20 +73,19 @@ class MicrofinanceLoanInterest(AccountsController):
             )
         )[0][0]
         if cur_billed != self.billed_amount:
-            self.company = frappe.get_value(
-                'Microfinance Loan', self.loan, 'company'
-            )
-            make_gl_entries(
-                self.add_interest_gl_entries(self.billed_amount - cur_billed),
-                merge_entries=False
-            )
+            delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
+            self.make_gl_entries()
 
-    def update_paid_amount(self, amount):
-        if amount > self.billed_amount:
-            return frappe.throw('Paid amount cannot exceed billed amount')
-        self.update({'paid_amount': amount})
-        self.update({'status': self.get_status()})
+    def set_fine_amount(self, amount=None):
+        if amount:
+            self.fine_amount = amount
+        else:
+            rate_of_late_charges = frappe.get_value(
+                'Microfinance Loan', self.loan, 'rate_of_late_charges'
+            )
+            self.fine_amount = self.billed_amount * rate_of_late_charges / 100
         self.save()
+        self.make_gl_entries(is_fine=1)
 
     def on_cancel(self):
         self.make_gl_entries(cancel=1)
@@ -82,16 +98,12 @@ class MicrofinanceLoanInterest(AccountsController):
         gl_dict.update(args)
         return super(MicrofinanceLoanInterest, self).get_gl_dict(gl_dict)
 
-    def make_gl_entries(self, cancel=0, adv_adj=0):
+    def make_gl_entries(self, cancel=0, adv_adj=0, is_fine=0):
         self.company = frappe.get_value(
             'Microfinance Loan', self.loan, 'company'
         )
-        gl_entries = self.add_interest_gl_entries(self.billed_amount)
-        make_gl_entries(
-            gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
-        )
-
-    def add_interest_gl_entries(self, billed_amount, gle=[]):
+        if is_fine:
+            self.posting_date = add_months(self.end_date, 1)
         interest_income_account, loan_account = frappe.get_value(
             'Microfinance Loan',
             self.loan,
@@ -100,25 +112,32 @@ class MicrofinanceLoanInterest(AccountsController):
         cost_center = frappe.db.get_value(
             'Microfinance Loan Settings', None, 'cost_center'
         )
-        return gle + [
+        amount = self.billed_amount if not is_fine else self.fine_amount
+        remarks = 'Interest for {}' if not is_fine else 'Late charge for {}'
+        gl_entries = [
             self.get_gl_dict({
                 'account': loan_account,
-                'debit': billed_amount,
+                'debit': amount,
             }),
             self.get_gl_dict({
                 'account': interest_income_account,
-                'credit': billed_amount,
+                'credit': amount,
                 'cost_center': cost_center,
-                'remarks': 'Interest for {}'.format(self.period),
+                'remarks': remarks.format(self.period),
             }),
         ]
+        make_gl_entries(
+            gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
+        )
 
-    def get_status(self, is_fined=False):
-        if is_fined:
-            return 'Fined'
-        if not self.paid_amount:
-            return 'Billed'
-        if self.paid_amount < self.billed_amount:
-            return 'Pending'
-        if self.paid_amount == self.billed_amount:
-            return 'Clear'
+    def update_status(self, status=None):
+        if status:
+            self.status = status
+        elif self.fine_amount:
+            self.status = 'Fined'
+        elif not self.paid_amount:
+            self.status = 'Billed'
+        elif self.paid_amount < self.billed_amount:
+            self.status = 'Pending'
+        elif self.paid_amount == self.billed_amount:
+            self.status = 'Clear'
