@@ -23,7 +23,8 @@ def _create_or_update_interest(opts, update=0):
         doc = frappe.get_doc('Microfinance Loan Interest', name)
         paid_amount = doc.paid_amount - opts.get('paid_amount') \
             if update else doc.paid_amount + opts.get('paid_amount')
-        doc.run_method('update_paid_amount', paid_amount)
+        doc.update({'paid_amount': paid_amount})
+        doc.save()
     else:
         doc = frappe.new_doc('Microfinance Loan Interest')
         doc.update(opts)
