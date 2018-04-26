@@ -228,3 +228,13 @@ def edit(name, billed_amount):
     interest.run_method('update_billed_amount', 4000.0)
     interest.save()
     return interest
+
+
+@frappe.whitelist()
+def fine(name):
+    pass
+
+
+@frappe.whitelist()
+def unfine(name):
+    pass
