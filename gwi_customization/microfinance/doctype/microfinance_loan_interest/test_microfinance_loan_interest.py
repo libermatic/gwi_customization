@@ -35,12 +35,12 @@ class TestMicrofinanceLoanInterest(unittest.TestCase):
         interest.save()
         self.assertEqual(interest.status, 'Clear')
 
-    def test_update_billed_amount_raises_if_paid(self):
+    def test_update_billed_amount_raises_if_paid_is_greater(self):
         interest = create_test_interest()
         interest.update({'paid_amount': 4000.0})
         interest.save()
         with self.assertRaises(frappe.exceptions.ValidationError):
-            interest.run_method('update_billed_amount', 4000.0)
+            interest.run_method('update_billed_amount', 3999.0)
 
     def test_update_billed_amount_raises_if_fined(self):
         interest = create_test_interest()
