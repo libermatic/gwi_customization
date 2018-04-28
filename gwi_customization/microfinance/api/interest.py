@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.utils \
     import flt, add_days, add_months, get_last_day, getdate, formatdate
-from functools import partial
+from functools import partial, reduce
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.utils import calc_interest
 from gwi_customization.microfinance.utils.fp import update, join, compose
@@ -228,29 +228,91 @@ def create(loan, period, start_date, billed_amount=None):
     return interest
 
 
+def _has_next_interest(interest):
+    return compose(
+        partial(frappe.db.exists, 'Microfinance Loan Interest'),
+        partial(make_name, interest.loan),
+        partial(add_months, months=1),
+    )(interest.start_date)
+
+
 @frappe.whitelist()
-def edit(name, billed_amount):
+def edit(name, billed_amount=0):
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
+    if not billed_amount:
+        return frappe.throw('Billed amount cannot be zero')
+    interest = frappe.get_doc('Microfinance Loan Interest', name)
+    if _has_next_interest(interest):
+        return frappe.throw('Interest for next interval already exists')
+    interest.run_method('update_billed_amount', billed_amount)
+    return interest
+
+
+@frappe.whitelist()
+def clear(name):
     if 'Loan Manager' not in frappe.permissions.get_roles():
         return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
-    next = compose(
-        partial(frappe.db.exists, 'Microfinance Loan Interest'),
-        partial(make_name, interest.loan),
-        getdate,
-        partial(add_months, months=1),
-    )(interest.start_date)
-    if next:
+    if _has_next_interest(interest):
         return frappe.throw('Interest for next interval already exists')
-    interest.run_method('update_billed_amount', 4000.0)
-    interest.save()
+    interest.run_method('update_billed_amount', interest.paid_amount)
+    return interest
+
+
+@frappe.whitelist()
+def remove(name):
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
+    interest = frappe.get_doc('Microfinance Loan Interest', name)
+    if _has_next_interest(interest):
+        return frappe.throw('Interest for next interval already exists')
+    interest.cancel()
+    frappe.delete_doc('Microfinance Loan Interest', name)
     return interest
 
 
 @frappe.whitelist()
 def fine(name):
-    pass
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
+    interest = frappe.get_doc('Microfinance Loan Interest', name)
+    loan_start_date = frappe.get_value(
+        'Microfinance Loan', interest.loan, 'posting_date'
+    )
+    prev_status = compose(
+        partial(
+            frappe.get_value, 'Microfinance Loan Interest', fieldname='status'
+        ),
+        partial(make_name, interest.loan),
+        partial(add_months, months=-1),
+    )(interest.end_date) if interest.start_date > loan_start_date else 'Clear'
+    if prev_status not in ['Clear', 'Fined']:
+        return frappe.throw('Previous interest is not cleared or fined')
+    if _has_next_interest(interest):
+        return frappe.throw('Interest for next interval already exists')
+    interest.run_method('set_fine_amount')
+    return interest
 
 
 @frappe.whitelist()
 def unfine(name):
-    pass
+    if 'Loan Manager' not in frappe.permissions.get_roles():
+        return frappe.throw('Insufficient permission')
+    interest = frappe.get_doc('Microfinance Loan Interest', name)
+    if not interest.fine_amount:
+        return frappe.throw('No late fines to undo')
+    if _has_next_interest(interest):
+        return frappe.throw('Interest for next interval already exists')
+    write_off = frappe.get_doc({
+        'doctype': 'Microfinance Write Off',
+        'loan': interest.loan,
+        'posting_date': add_months(interest.end_date, 1),
+        'amount': interest.fine_amount,
+        'reason': 'Late fine reversed for {}'.format(interest.period),
+        'write_off_type': 'Fine',
+        'reference_doc': interest.name,
+    })
+    write_off.insert()
+    write_off.submit()
+    return interest
