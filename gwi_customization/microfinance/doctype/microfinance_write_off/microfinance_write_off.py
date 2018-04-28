@@ -6,10 +6,18 @@ from __future__ import unicode_literals
 import frappe
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
-from gwi_customization.microfinance.api.loan import update_recovery_status
+from gwi_customization.microfinance.api.loan import (
+    update_recovery_status, get_outstanding_principal
+)
 
 
 class MicrofinanceWriteOff(AccountsController):
+    def on_save(self):
+        self.current_outstanding = get_outstanding_principal(
+            self.loan, self.posting_date
+        )
+        self.next_outstanding = self.current_outstanding - self.amount
+
     def on_submit(self):
         self.make_gl_entries()
         update_recovery_status(self.loan, self.posting_date)
