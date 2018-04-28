@@ -4,3 +4,4 @@
 *.swp
 tags
 gwi_customization/docs/current
+gwi_customization/**/__pycache__
