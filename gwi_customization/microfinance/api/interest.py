@@ -55,7 +55,7 @@ def get_unpaid(loan):
                 loan, posting_date, period, start_date, end_date,
                 billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest`
-            WHERE loan='{loan}' AND paid_amount < billed_amount
+            WHERE loan='{loan}' AND status != 'Clear'
             ORDER BY start_date
         """.format(loan=loan),
         as_dict=True,
@@ -69,7 +69,7 @@ def get_last_paid(loan):
                 loan, posting_date, period, start_date, end_date,
                 billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest`
-            WHERE loan='{loan}' AND paid_amount = billed_amount
+            WHERE loan='{loan}' AND status = 'Clear'
             ORDER BY start_date DESC
             LIMIT 1
         """.format(loan=loan),
@@ -78,7 +78,6 @@ def get_last_paid(loan):
     return res[0] if res else None
 
 
-@frappe.whitelist()
 def allocate_interests(loan, posting_date, amount_to_allocate):
     periods = []
     to_allocate = amount_to_allocate
@@ -99,9 +98,12 @@ def allocate_interests(loan, posting_date, amount_to_allocate):
         outstanding_amount, rate_of_interest, calculation_slab
     )
     last = get_last_paid(loan)
+    effective_date = frappe.get_value(
+        'Microfinance Loan Settings', None, 'effective_date'
+    )
     init_date = add_days(periods[-1].get('end_date'), 1) if periods \
         else add_days(last.get('end_date'), 1) if last \
-        else loan_date
+        else max(loan_date, getdate(effective_date))
     gen_per = _generate_periods(init_date, interest_amount)
     while to_allocate > 0:
         per = _allocate(gen_per.next(), to_allocate)
