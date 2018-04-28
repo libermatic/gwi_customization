@@ -23,3 +23,9 @@ def join(sep):
     def fn(items):
         return sep.join(items)
     return fn
+
+
+def pick(key):
+    def fn(kv_dict):
+        return kv_dict.get(key)
+    return fn
