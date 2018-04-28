@@ -4,8 +4,8 @@
     <th>Posting Date</th>
     <th>Status</th>
     <th class="text-right">Amount</th>
-    <th class="text-right">Outstanding</th>
     <th class="text-right">Late Fine</th>
+    <th class="text-right">Outstanding</th>
     <th />
   </thead>
   <tbody>
@@ -22,21 +22,25 @@
         ) }}
       </td>
       <td class="text-right">
+        {% if (data[i]["fine_wrote_off"]) { %}<s>{% } %}
+        {{ format_currency(
+          data[i]["fine_amount"],
+          frappe.defaults.get_default("currency"),
+          2
+        ) }}
+        {% if (data[i]["fine_wrote_off"]) { %}</s>{% } %}
+      </td>
+      <td class="text-right">
         {{ format_currency(
           data[i]["outstanding_amount"],
           frappe.defaults.get_default("currency"),
           2
         ) }}
       </td>
-      <td class="text-right">
-        {{ format_currency(
-          data[i]["fine_amount"],
-          frappe.defaults.get_default("currency"),
-          2
-        ) }}
-      </td>
       <td class="text-center">
-        <button type="button" class="btn btn-xs" name="{{ data[i].name }}" />
+        <button type="button" class="btn btn-xs" name="{{ data[i].name }}">
+          Actions
+        </button>
       </td>
     </tr>
     {% } %}
