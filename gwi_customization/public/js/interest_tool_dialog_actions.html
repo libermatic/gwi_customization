@@ -1,0 +1,74 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th class="text-center">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="text-muted" data-name="create">
+      <td>
+        Create a new Interest entry for this period.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Create Interest
+        </button>
+      </td>
+    </tr>
+    <tr class="text-muted" data-name="update">
+      <td>
+        Update the Billed Amount of this Interest entry.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Update Interest
+        </button>
+      </td>
+    </tr>
+    <tr class="text-muted" data-name="clear">
+      <td>
+        Update the Billed Amount to match the Paid Amount of this Interest
+        entry.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Clear Interest
+        </button>
+      </td>
+    </tr>
+    <tr class="text-muted" data-name="remove">
+      <td>
+        Remove this Interest entry. Note that this action will also remove any
+        Late Fines if present.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Remove Interest
+        </button>
+      </td>
+    </tr>
+    <tr class="text-muted" data-name="fine">
+      <td>
+        Manually create Late Charge for this Interest entry.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Create Late Fine
+        </button>
+      </td>
+    </tr>
+    <tr class="text-muted" data-name="unfine">
+      <td>
+        Write off the Late Charge for this Interest entry. Note that this
+        action would locked this entry and no further action would not be
+        possible.
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-block disabled">
+          Write Off Fine
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
