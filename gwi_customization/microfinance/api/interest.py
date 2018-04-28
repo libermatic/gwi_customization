@@ -198,9 +198,25 @@ def list(loan, from_date, to_date):
         partial(_gen_dates, to_date=to_date), partial(max, loan_date), getdate,
     )(from_date)
 
-    return map(
-        lambda x: make_item(x) if get_item(x) else make_empty(x), dates
+    effective_date = frappe.get_value(
+        'Microfinance Loan Settings', None, 'effective_date'
     )
+    is_not_sys_mgr = 'System Manager' not in frappe.permissions.get_roles()
+
+    def change_status(row):
+        start_date = row.get('start_date')
+        status = 'Clear' \
+            if is_not_sys_mgr \
+            and getdate(effective_date) > getdate(start_date) \
+            else row.get('status')
+        return update({
+            'status': status,
+        })(row)
+
+    return compose(
+        partial(map, change_status),
+        partial(map, lambda x: make_item(x) if get_item(x) else make_empty(x)),
+    )(dates)
 
 
 @frappe.whitelist()
@@ -214,6 +230,8 @@ def create(loan, period, start_date, billed_amount=None):
         partial(add_months, months=-1),
     )(start_date)
     if not prev:
+        if 'System Manager' not in frappe.permissions.get_roles():
+            return frappe.throw('Only System Managers can execute this')
         return frappe.throw('Interest for previous interval does not exists')
     end_date = compose(get_last_day, getdate)(start_date)
     interest = frappe.get_doc({
