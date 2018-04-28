@@ -87,30 +87,17 @@ setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
 doc_events = {
     'Customer': {
         'on_update':
-            'gwi_customization.microfinance.doctype.microfinance_loanee.microfinance_loanee.on_customer_update',
+            'gwi_customization.microfinance.doctype.microfinance_loanee'
+            '.microfinance_loanee.on_customer_update',
     }
 }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#     "all": [
-#         "gwi_customization.tasks.all"
-#     ],
-#     "daily": [
-#         "gwi_customization.tasks.daily"
-#     ],
-#     "hourly": [
-#         "gwi_customization.tasks.hourly"
-#     ],
-#     "weekly": [
-#         "gwi_customization.tasks.weekly"
-#     ]
-#     "monthly": [
-#         "gwi_customization.tasks.monthly"
-#     ]
-# }
+scheduler_events = {
+    'monthly': ['gwi_customization.tasks.monthly']
+}
 
 # Testing
 # -------
