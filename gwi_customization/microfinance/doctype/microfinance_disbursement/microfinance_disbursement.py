@@ -66,14 +66,13 @@ class MicrofinanceDisbursement(AccountsController):
         self.reload()
 
     def add_loan_gl_entries(self, gle=[]):
-        remarks = 'Loan disbursed' if self.total_disbursed > self.amount else \
-            'Opening for orginal {}'.format(
-                fmt_money(
-                    self.total_disbursed,
-                    precision=0,
-                    currency=frappe.defaults.get_user_default('currency'),
-                )
+        remarks = 'Opening for orginal {}'.format(
+            fmt_money(
+                self.total_disbursed,
+                precision=0,
+                currency=frappe.defaults.get_user_default('currency'),
             )
+        ) if self.is_opening == 'Yes' else 'Loan disbursed'
         return gle + [
             self.get_gl_dict({
                 'account': self.loan_account,
