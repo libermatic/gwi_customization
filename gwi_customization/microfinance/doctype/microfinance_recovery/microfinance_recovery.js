@@ -2,12 +2,14 @@
 // For license information, please see license.txt
 
 function calculate_recovery_totals(frm) {
-  const { total_amount = 0, principal_amount = 0, charges = [] } = frm.doc;
-  frm.set_value('total_interests', total_amount - principal_amount);
-  frm.set_value(
-    'total_charges',
-    charges.reduce((a, { charge_amount: x = 0 }) => a + x, 0)
-  );
+  if (frm.fields_dict['total_interests'] && frm.fields_dict['total_charges']) {
+    const { total_amount = 0, principal_amount = 0, charges = [] } = frm.doc;
+    frm.set_value('total_interests', total_amount - principal_amount);
+    frm.set_value(
+      'total_charges',
+      charges.reduce((a, { charge_amount: x = 0 }) => a + x, 0)
+    );
+  }
 }
 
 async function set_recovery_amounts(frm) {

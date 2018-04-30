@@ -2,12 +2,14 @@
 // For license information, please see license.txt
 
 function calculate_disbursement_totals(frm) {
-  const { amount = 0, recovered_amount = 0, charges = [] } = frm.doc;
-  frm.set_value('total_disbursed', amount - recovered_amount);
-  frm.set_value(
-    'total_charges',
-    charges.reduce((a, { charge_amount: x = 0 }) => a + x, 0)
-  );
+  if (frm.fields_dict['total_disbursed'] && frm.fields_dict['total_charges']) {
+    const { amount = 0, recovered_amount = 0, charges = [] } = frm.doc;
+    frm.set_value('total_disbursed', amount - recovered_amount);
+    frm.set_value(
+      'total_charges',
+      charges.reduce((a, { charge_amount: x = 0 }) => a + x, 0)
+    );
+  }
 }
 
 frappe.ui.form.on('Microfinance Disbursement', {
