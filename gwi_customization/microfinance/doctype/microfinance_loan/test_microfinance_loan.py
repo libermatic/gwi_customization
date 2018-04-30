@@ -7,6 +7,9 @@ import frappe
 import unittest
 from gwi_customization.microfinance.doctype.microfinance_loanee.\
     test_microfinance_loanee import create_test_loanee, remove_test_loanee
+# from gwi_customization.microfinance.doctype.microfinance_disbursement.\
+#     test_microfinance_disbursement \
+#     import create_test_disbursement, remove_test_disbursement
 
 test_dependencies = ['Microfinance Loan Plan']
 
@@ -46,6 +49,75 @@ class TestMicrofinanceLoan(unittest.TestCase):
             loan.interest_income_account, interest_income_account
         )
 
+    def test_raises_when_recovery_more_than_principal(self):
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            create_test_loan(
+                loan_principal=10000.0,
+                recovery_amount=10001.0,
+            )
+
+    def test_principal_more_than_allowed(self):
+        create_test_loanee(
+            customer_name='_Test Loanee 1',
+            date_of_retirement='2018-12-12',
+            net_salary_amount=3000.0,
+        )
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            create_test_loan(
+                skip_dependencies=True,
+                posting_date='2017-12-01',
+                loan_principal=11001.0,
+                recovery_amount=1500.0,
+            )
+
+    def test_recovery_less_than_allowed(self):
+        create_test_loanee(
+            customer_name='_Test Loanee 1',
+            date_of_retirement='2018-12-12',
+            net_salary_amount=3000.0,
+        )
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            create_test_loan(
+                skip_dependencies=True,
+                posting_date='2017-12-01',
+                loan_principal=11000.0,
+                recovery_amount=999.0,
+            )
+
+    def test_total_outstanding_more_than_allowed(self):
+        create_test_loanee(
+            customer_name='_Test Loanee 1',
+            date_of_retirement='2018-12-12',
+            net_salary_amount=3000.0,
+        )
+        create_test_loan(
+            skip_dependencies=True,
+            posting_date='2017-12-01',
+            loan_principal=6000.0,
+            recovery_amount=600.0,
+        )
+        disbursement = frappe.get_doc({
+            'doctype': 'Microfinance Disbursement',
+            'loan': '_TEST LOAN',
+            'posting_date': '2017-12-02',
+            'amount': 6000.0,
+            'mode_of_payment': 'Cash',
+        })
+        disbursement.insert()
+        disbursement.submit()
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            create_test_loan(
+                skip_dependencies=True,
+                loan_no='_Test Loan Another',
+                posting_date='2018-02-12',
+                loan_principal=6000.0,
+                recovery_amount=700.0,
+            )
+        disbursement.cancel()
+        frappe.delete_doc(
+            'Microfinance Disbursement', name=disbursement.name, force=True
+        )
+
 
 def create_test_loan(**kwargs):
     args = frappe._dict(kwargs)
@@ -68,7 +140,7 @@ def create_test_loan(**kwargs):
     return doc
 
 
-def remove_test_loan(loan='_TEST LOAN', keep_dependencies=False):
+def remove_test_loan(loan='_Test Loan', keep_dependencies=False):
     try:
         doc = frappe.get_doc('Microfinance Loan', loan)
         if doc.docstatus == 1:

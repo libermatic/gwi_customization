@@ -5,7 +5,7 @@
     "rate_of_interest": 10,
     "calculation_slab": 10000.0,
     "rate_of_late_charges": 5,
-    "effective_from": "2018-03-01",
+    "effective_from": "2017-11-01",
     "income_multiple": 20,
     "max_duration": 60
   },
