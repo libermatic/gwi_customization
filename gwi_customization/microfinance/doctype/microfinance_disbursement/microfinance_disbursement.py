@@ -56,7 +56,7 @@ class MicrofinanceDisbursement(AccountsController):
     def make_gl_entries(self, cancel=0, adv_adj=0):
         self.is_opening = 'Yes' if self.is_opening else 'No'
         gl_entries = self.add_loan_gl_entries()
-        if self.is_opening == 'Yes':
+        if self.is_opening == 'Yes' and self.recovered_amount:
             gl_entries = self.add_opening_gl_entries(gl_entries)
         if self.charges:
             gl_entries = self.add_charges_gl_entries(gl_entries)
