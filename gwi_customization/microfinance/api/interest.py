@@ -223,16 +223,17 @@ def list(loan, from_date, to_date):
 def create(loan, period, start_date, billed_amount=None):
     if 'Loan Manager' not in frappe.permissions.get_roles():
         return frappe.throw('Insufficient permission')
-    prev = compose(
-        partial(frappe.db.exists, 'Microfinance Loan Interest'),
-        partial(make_name, loan),
-        getdate,
-        partial(add_months, months=-1),
-    )(start_date)
-    if not prev:
-        if 'System Manager' not in frappe.permissions.get_roles():
-            return frappe.throw('Only System Managers can execute this')
-        return frappe.throw('Interest for previous interval does not exists')
+    if 'System Manager' not in frappe.permissions.get_roles():
+        prev = compose(
+            partial(frappe.db.exists, 'Microfinance Loan Interest'),
+            partial(make_name, loan),
+            getdate,
+            partial(add_months, months=-1),
+        )(start_date)
+        if not prev:
+            return frappe.throw(
+                'Interest for previous interval does not exists'
+            )
     end_date = compose(get_last_day, getdate)(start_date)
     interest = frappe.get_doc({
         'doctype': 'Microfinance Loan Interest',
