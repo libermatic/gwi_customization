@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.utils import getdate, get_last_day, add_months, flt, rounded
 from functools import partial
-from gwi_customization.microfinance.utils.fp import join, compose
+from gwi_customization.microfinance.utils.fp import join, compose, pick
 from gwi_customization.microfinance.utils import month_diff, calc_interest
 
 
@@ -38,29 +38,17 @@ def get_undisbursed_principal(loan):
 
 def get_recovered_principal(loan):
     """Get recovered principal"""
-    loan_account = frappe.get_value('Microfinance Loan', loan, 'loan_account')
-    conds = [
-        "account = '{}'".format(loan_account),
-        "against_voucher_type = 'Microfinance Loan'",
-        "against_voucher = '{}'".format(loan),
-    ]
-    recovered = frappe.db.sql(
-        """
-            SELECT sum(credit) - sum(debit) FROM `tabGL Entry`
-            WHERE voucher_type = 'Microfinance Recovery' AND {conds}
-        """.format(
-            conds=join(" AND ")(conds)
-        )
-    )[0][0] or 0
-    unrecorded = frappe.db.sql(
-        """
-            SELECT sum(credit) FROM `tabGL Entry`
-            WHERE voucher_type = 'Microfinance Disbursement' AND {conds}
-        """.format(
-            conds=join(" AND ")(conds)
-        )
-    )[0][0] or 0
-    return recovered + unrecorded
+    def get_sum_of(doctype, field):
+        def fn(loan):
+            return frappe.get_all(
+                doctype,
+                filters={'docstatus': 1, 'loan': loan},
+                fields=field,
+            )
+        return compose(sum, partial(map, pick(field)), fn)
+
+    return get_sum_of('Microfinance Recovery', 'principal_amount')(loan) \
+        + get_sum_of('Microfinance Disbursement', 'recovered_amount')(loan)
 
 
 @frappe.whitelist()
