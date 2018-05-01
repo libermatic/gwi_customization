@@ -109,7 +109,7 @@ def allocate_interests(loan, posting_date, amount_to_allocate):
         per = _allocate(gen_per.next(), to_allocate)
         periods.append(per)
         to_allocate -= per.get('allocated_amount')
-    return periods
+    return filter(lambda x: x.get('allocated_amount') > 0, periods)
 
 
 def make_name(loan, start_date):
