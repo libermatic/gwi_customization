@@ -140,13 +140,20 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
       const result_html = $(fg.fields_dict['result_html'].wrapper)
         .empty()
         .addClass('hidden');
-      const { message: data } = await frappe.call({
-        method: 'gwi_customization.microfinance.api.interest.list',
-        args: values,
-      });
+      const [{ message: data }, { message: loan }] = await Promise.all([
+        frappe.call({
+          method: 'gwi_customization.microfinance.api.interest.list',
+          args: values,
+        }),
+        frappe.db.get_value('Microfinance Loan', values['loan'], [
+          'customer_name',
+          'loan_plan',
+        ]),
+      ]);
+      console.log(loan);
       result_html
         .removeClass('hidden')
-        .html(frappe.render_template('interest_list', { data }));
+        .html(frappe.render_template('interest_list', { loan, data }));
       data.forEach(({ name, status, fine_wrote_off }) => {
         const btn = result_html.find(`button[name='${name}']`);
         if (status === 'Clear' || fine_wrote_off) {
