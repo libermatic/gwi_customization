@@ -49,6 +49,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   const actions_by_status = {
     Unbilled: ['create'],
     Billed: ['update', 'remove', 'fine'],
+    BilledFined: ['remove', 'unfine'],
     Pending: ['update', 'clear', 'fine'],
     Clear: [],
     Fined: ['unfine'],
@@ -150,7 +151,6 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
           'loan_plan',
         ]),
       ]);
-      console.log(loan);
       result_html
         .removeClass('hidden')
         .html(frappe.render_template('interest_list', { loan, data }));
@@ -166,15 +166,25 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
           period,
           start_date,
           billed_amount,
+          outstanding_amount,
           fine_wrote_off,
           status,
         } =
           data.find(({ name }) => name === e.target.name) || {};
         dialog.set_title(`Actions for Interest Entry ${period}`);
+        let render_status = status;
+        if (status === 'Fined') {
+          if (billed_amount === outstanding_amount) {
+            render_status = 'BilledFined';
+          }
+          if (fine_wrote_off) {
+            render_status = 'WroteOff';
+          }
+        }
         dialog.fields_dict['dialog_actions_html'].html(
-          render_buttons(fine_wrote_off ? 'WroteOff' : status)
+          render_buttons(render_status)
         );
-        actions_by_status[status].forEach(action => {
+        actions_by_status[render_status].forEach(action => {
           dialog.fields_dict['dialog_actions_html'].$wrapper
             .find(`tr[data-name="${action}"] button`)
             .click(make_action(requests[action]));
