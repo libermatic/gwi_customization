@@ -36,6 +36,33 @@ def get_undisbursed_principal(loan):
     return principal - disbursed
 
 
+def get_recovered_principal(loan):
+    """Get recovered principal"""
+    loan_account = frappe.get_value('Microfinance Loan', loan, 'loan_account')
+    conds = [
+        "account = '{}'".format(loan_account),
+        "against_voucher_type = 'Microfinance Loan'",
+        "against_voucher = '{}'".format(loan),
+    ]
+    recovered = frappe.db.sql(
+        """
+            SELECT sum(credit) - sum(debit) FROM `tabGL Entry`
+            WHERE voucher_type = 'Microfinance Recovery' AND {conds}
+        """.format(
+            conds=join(" AND ")(conds)
+        )
+    )[0][0] or 0
+    unrecorded = frappe.db.sql(
+        """
+            SELECT sum(credit) FROM `tabGL Entry`
+            WHERE voucher_type = 'Microfinance Disbursement' AND {conds}
+        """.format(
+            conds=join(" AND ")(conds)
+        )
+    )[0][0] or 0
+    return recovered + unrecorded
+
+
 @frappe.whitelist()
 def get_outstanding_principal(loan, posting_date=None):
     """Get outstanding principal"""
@@ -58,6 +85,7 @@ def get_outstanding_principal(loan, posting_date=None):
 
 
 def get_chart_data(loan_name):
+    recovered = get_recovered_principal(loan_name)
     outstanding = get_outstanding_principal(loan_name)
     undisbursed = get_undisbursed_principal(loan_name)
 
@@ -75,11 +103,6 @@ def get_chart_data(loan_name):
             conds=join(" AND ")(conds)
         )
     )[0][0] or 0
-
-    sanctioned = frappe.get_value(
-        'Microfinance Loan', loan_name, 'loan_principal'
-    )
-    recovered = (sanctioned - undisbursed) - (outstanding + wrote_off)
 
     data = {
         'labels': [

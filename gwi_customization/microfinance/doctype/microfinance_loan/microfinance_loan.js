@@ -3,6 +3,10 @@
 
 frappe.ui.form.on('Microfinance Loan', {
   refresh: async function(frm) {
+    frm.trigger('clear_chart');
+    if (frm.doc.docstatus === 1) {
+      frm.trigger('render_chart');
+    }
     frm.fields_dict['loan_account'].get_query = doc => ({
       filters: {
         root_type: 'Asset',
@@ -39,11 +43,6 @@ frappe.ui.form.on('Microfinance Loan', {
       });
     }
   },
-  onload: function(frm) {
-    if (frm.doc.docstatus === 1) {
-      frm.trigger('render_chart');
-    }
-  },
   render_chart: function(frm) {
     const chart_area = frm.$wrapper.find('.form-graph');
     chart_area.empty();
@@ -59,6 +58,12 @@ frappe.ui.form.on('Microfinance Loan', {
       .addClass('hidden');
     $(chart.container)
       .find('.sub-title')
+      .addClass('hidden');
+  },
+  clear_chart: function(frm) {
+    frm.$wrapper
+      .find('.form-graph')
+      .empty()
       .addClass('hidden');
   },
 });
