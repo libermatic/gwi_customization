@@ -47,8 +47,6 @@ class MicrofinanceLoanInterest(AccountsController):
         if self.paid_amount != before.paid_amount:
             if self.paid_amount > self.billed_amount:
                 frappe.throw('Paid amount cannot exceed billed amount')
-            if before.fine_amount:
-                frappe.throw('Period already has been fined')
             self.status = self.get_status()
         if self.fine_amount != before.fine_amount:
             if self.paid_amount == self.billed_amount:
