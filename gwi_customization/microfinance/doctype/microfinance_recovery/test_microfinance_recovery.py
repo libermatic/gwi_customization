@@ -25,20 +25,21 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_totals(self):
         recovery = create_test_recovery(
-            total_amount=15000.0,
+            total_interests=10000.0,
             principal_amount=5000.0,
             charges=[
                 {'charge': '_Test Charge 1', 'charge_amount': 150.0},
                 {'charge': '_Test Charge 2', 'charge_amount': 5000.0},
             ]
         )
-        self.assertEqual(recovery.total_interests, 10000.0)
+        self.assertEqual(recovery.total_amount, 15000.0)
         self.assertEqual(recovery.total_charges, 5150.0)
+        self.assertEqual(recovery.total_received, 20150.0)
 
     def test_interests(self):
         recovery = create_test_recovery(
             posting_date='2017-09-17',
-            total_amount=15000.0,
+            total_interests=10000.0,
             principal_amount=5000.0,
         )
         self.assertEqual(len(recovery.periods), 1)
@@ -62,7 +63,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_interests_partial(self):
         recovery = create_test_recovery(
-            total_amount=12000.0,
+            total_interests=7000.0,
             principal_amount=5000.0,
         )
         self.assertEqual(recovery.periods[0].billed_amount, 10000)
@@ -80,7 +81,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_interests_multiple(self):
         recovery = create_test_recovery(
-            total_amount=22000.0,
+            total_interests=17000.0,
             principal_amount=5000.0,
         )
         period = frappe.get_doc(
@@ -100,7 +101,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_interests_multiple_paid_amounts(self):
         create_test_recovery(
-            total_amount=22000.0,
+            total_interests=17000.0,
             principal_amount=5000.0,
         )
         exp_amounts = dict((d[0], d) for d in [
@@ -123,12 +124,12 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_interests_with_previous_entries(self):
         create_test_recovery(
-            total_amount=32000.0,
+            total_interests=17000.0,
             principal_amount=15000.0,
         )
         create_test_recovery(
             skip_dependencies=True,
-            total_amount=12000.0,
+            total_interests=12000.0,
         )
         exp_amounts = dict((d[0], d) for d in [
             ['_Test Loan 1/2017-08', 10000],
@@ -151,7 +152,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_cancel_on_interests(self):
         recovery = create_test_recovery(
-            total_amount=22000.0,
+            total_interests=17000.0,
             principal_amount=5000.0,
         )
         recovery.cancel()
@@ -165,7 +166,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
             self.assertEqual(per.get('paid_amount'), 0)
 
     def test_updates_loan_status(self):
-        recovery = create_test_recovery()
+        recovery = create_test_recovery(principal_amount=10000.0)
         recovery_status = frappe.get_value(
             'Microfinance Loan', recovery.loan, 'recovery_status'
         )
@@ -224,7 +225,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
 
     def test_gle_with_interests(self):
         recovery = create_test_recovery(
-            total_amount=15000.0,
+            total_interests=10000.0,
             principal_amount=5000.0,
         )
         exp_gle = dict((d[0], d) for d in [
@@ -257,8 +258,8 @@ def create_test_recovery(**kwargs):
     doc.update({
         'loan': args.loan or '_Test Loan 1',
         'posting_date': args.posting_date or '2017-09-17',
-        'total_amount': args.total_amount or args.principal_amount or 15000.0,
-        'principal_amount': args.principal_amount or 0,
+        'total_interests': args.total_interests or 0.0,
+        'principal_amount': args.principal_amount or 0.0,
         'mode_of_payment': args.mode_of_payment or 'Cash',
     })
     if args.charges:

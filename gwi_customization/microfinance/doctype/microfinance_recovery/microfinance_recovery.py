@@ -41,11 +41,12 @@ _stringify_periods = compose(
 
 class MicrofinanceRecovery(AccountsController):
     def before_save(self):
-        self.total_interests = \
-            flt(self.total_amount) - flt(self.principal_amount)
+        self.total_amount = \
+            flt(self.total_interests) + flt(self.principal_amount)
         self.total_charges = reduce(
             lambda a, x: a + x.charge_amount, self.charges, 0
         )
+        self.total_received = self.total_amount + self.total_charges
         account_dict = get_bank_cash_account(
             mode_of_payment=self.mode_of_payment or 'Cash',
             company=self.company,

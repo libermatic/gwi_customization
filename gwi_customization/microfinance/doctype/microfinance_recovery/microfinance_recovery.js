@@ -3,12 +3,15 @@
 
 function calculate_recovery_totals(frm) {
   if (frm.fields_dict['total_interests'] && frm.fields_dict['total_charges']) {
-    const { total_amount = 0, principal_amount = 0, charges = [] } = frm.doc;
-    frm.set_value('total_interests', total_amount - principal_amount);
-    frm.set_value(
-      'total_charges',
-      charges.reduce((a, { charge_amount: x = 0 }) => a + x, 0)
+    const { total_interests = 0, principal_amount = 0, charges = [] } = frm.doc;
+    const total_amount = total_interests + principal_amount;
+    const total_charges = charges.reduce(
+      (a, { charge_amount: x = 0 }) => a + x,
+      0
     );
+    frm.set_value('total_amount', total_interests + principal_amount);
+    frm.set_value('total_charges', total_charges);
+    frm.set_value('total_received', total_amount + total_charges);
   }
 }
 
@@ -26,7 +29,7 @@ async function set_recovery_amounts(frm) {
       }),
       frappe.db.get_value('Microfinance Loan', loan, 'recovery_amount'),
     ]);
-    frm.set_value('total_amount', interest_amount + recovery_amount);
+    frm.set_value('total_interests', interest_amount);
     frm.set_value('principal_amount', recovery_amount);
   }
 }
