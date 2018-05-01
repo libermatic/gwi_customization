@@ -112,8 +112,24 @@ def allocate_interests(loan, posting_date, amount_to_allocate):
     return periods
 
 
+def make_name(loan, start_date):
+    return loan + '/' + formatdate(start_date, 'YYYY-MM')
+
+
 @frappe.whitelist()
 def get_current_interest(loan, posting_date):
+    prev_billed_amount = compose(
+        partial(
+            frappe.get_value,
+            'Microfinance Loan Interest',
+            fieldname='billed_amount'
+        ),
+        partial(make_name, loan),
+        getdate,
+        partial(add_months, months=-1),
+    )(posting_date)
+    if prev_billed_amount:
+        return prev_billed_amount
     outstanding = get_outstanding_principal(loan, posting_date)
     calculation_slab, rate_of_interest = frappe.get_value(
         'Microfinance Loan',
@@ -123,10 +139,6 @@ def get_current_interest(loan, posting_date):
     return calc_interest(
         outstanding, rate_of_interest, calculation_slab
     )
-
-
-def make_name(loan, start_date):
-    return loan + '/' + formatdate(start_date, 'YYYY-MM')
 
 
 def get_fine_write_off(interest):
