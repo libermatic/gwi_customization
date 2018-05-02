@@ -5,17 +5,21 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 
-from gwi_customization.microfinance.api.loan \
-    import get_undisbursed_principal, get_outstanding_principal
+from gwi_customization.microfinance.api.loan import (
+    get_undisbursed_principal,
+    get_outstanding_principal,
+    get_recovered_principal,
+)
 
 
 def _make_row(row):
     loan, sanctioned = row[1], row[3]
     undisbursed = get_undisbursed_principal(loan)
     outstanding = get_outstanding_principal(loan)
+    recovered = get_recovered_principal(loan)
     return row + (
         sanctioned - undisbursed,
-        sanctioned - undisbursed - outstanding,
+        recovered,
         outstanding,
     )
 
