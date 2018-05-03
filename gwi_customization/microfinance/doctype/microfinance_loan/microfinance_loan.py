@@ -157,4 +157,7 @@ class MicrofinanceLoan(Document):
         self.billing_start_date = add_days(get_last_day(self.posting_date), 1)
 
     def before_update_after_submit(self):
-        self.validate_allowable_amount()
+        before = self.get_doc_before_save()
+        if before.loan_principal != self.loan_principal \
+                or before.recovery_amount != self.recovered_amount:
+            self.validate_allowable_amount()
