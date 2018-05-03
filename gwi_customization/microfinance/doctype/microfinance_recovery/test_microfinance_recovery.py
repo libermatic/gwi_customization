@@ -51,7 +51,7 @@ class TestMicrofinanceRecovery(unittest.TestCase):
         ).as_dict()
         to_check = {
             'loan': '_Test Loan 1',
-            'posting_date': getdate('2017-09-17'),
+            'posting_date': getdate('2017-09-01'),
             'period': 'Aug 2017',
             'start_date': getdate('2017-08-19'),
             'end_date': getdate('2017-08-31'),
@@ -120,6 +120,28 @@ class TestMicrofinanceRecovery(unittest.TestCase):
             )
             self.assertEquals(
                 exp_amounts[per.get('name')][1], per.get('paid_amount')
+            )
+
+    def test_interests_multiple_posting_dates(self):
+        create_test_recovery(
+            posting_date='2017-09-20',
+            total_interests=27000.0,
+            principal_amount=5000.0,
+        )
+        exp_dates = {
+            '_Test Loan 1/2017-08': getdate('2017-09-01'),
+            '_Test Loan 1/2017-09': getdate('2017-09-20'),
+            '_Test Loan 1/2017-10': getdate('2017-09-20'),
+        }
+        periods = frappe.get_all(
+            'Microfinance Loan Interest',
+            filters={'loan': '_Test Loan 1'},
+            fields=['name', 'posting_date'],
+        )
+        self.assertEqual(len(periods), 3)
+        for per in periods:
+            self.assertEquals(
+                exp_dates[per.get('name')], per.get('posting_date')
             )
 
     def test_interests_with_previous_entries(self):

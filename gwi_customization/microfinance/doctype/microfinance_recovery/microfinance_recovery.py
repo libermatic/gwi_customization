@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 from functools import reduce, partial
 import frappe
-from frappe.utils import flt
+from frappe.utils import flt, add_days, getdate
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice \
 from gwi_customization.microfinance.api.loan import update_recovery_status
 from gwi_customization.microfinance.api.interest \
     import allocate_interests, make_name
-from gwi_customization.microfinance.utils.fp import compose, update, join
+from gwi_customization.microfinance.utils.fp import compose, update, join, pick
 
 
 def _create_or_update_interest(opts, update=0):
@@ -144,6 +144,12 @@ class MicrofinanceRecovery(AccountsController):
         ]
 
     def make_interests(self, cancel=0):
+        make_posting_date = compose(
+            partial(min, getdate(self.posting_date)),
+            getdate,
+            partial(add_days, days=1),
+            pick('end_date'),
+        )
         return compose(
             partial(
                 map,
@@ -154,9 +160,9 @@ class MicrofinanceRecovery(AccountsController):
                 compose(
                     update({
                         'loan': self.loan,
-                        'posting_date': self.posting_date,
                     }),
                     lambda x: {
+                        'posting_date': make_posting_date(x),
                         'period': x.period_label,
                         'start_date': x.start_date,
                         'end_date': x.end_date,
