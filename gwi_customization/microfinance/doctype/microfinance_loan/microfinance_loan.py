@@ -162,5 +162,5 @@ class MicrofinanceLoan(Document):
     def before_update_after_submit(self):
         before = self.get_doc_before_save()
         if before.loan_principal != self.loan_principal \
-                or before.recovery_amount != self.recovered_amount:
+                or before.recovery_amount != self.recovery_amount:
             self.validate_allowable_amount(is_update=True)
