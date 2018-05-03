@@ -36,10 +36,38 @@ frappe.ui.form.on('Microfinance Loan', {
     if (frm.doc.docstatus > 0) {
       frm.set_df_property('loan_principal', 'read_only', 1);
       frm.set_df_property('recovery_amount', 'read_only', 1);
-      frm.page.add_menu_item(__('Account Statement'), function(e) {
+      frm.page.add_menu_item(__('Account Statement'), function() {
         frappe.set_route('query-report', 'Microfinance Account Statement', {
           loan: frm.doc['name'],
         });
+      });
+      frm.page.add_menu_item(__('Update Principal / Recovery'), function() {
+        frappe.prompt(
+          [
+            {
+              fieldname: 'principal_amount',
+              fieldtype: 'Currency',
+              label: 'Principal',
+              default: frm.doc['loan_principal'],
+            },
+            {
+              fieldname: 'recovery_amount',
+              fieldtype: 'Currency',
+              label: 'Recovery',
+              default: frm.doc['recovery_amount'],
+            },
+          ],
+          async function(values) {
+            await frappe.call({
+              method: 'gwi_customization.microfinance.api.loan.update_amounts',
+              args: { name: frm.doc['name'], ...values },
+            });
+            frm.reload_doc();
+            frappe.show_alert('Amounts updated.', 5);
+          },
+          'Update Amounts',
+          'Submit'
+        );
       });
     }
   },
