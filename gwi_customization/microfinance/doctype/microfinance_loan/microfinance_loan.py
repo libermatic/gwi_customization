@@ -64,7 +64,7 @@ class MicrofinanceLoan(Document):
             frappe.throw("Recovery Amount cannot exceed Principal.")
         self.validate_allowable_amount()
 
-    def validate_allowable_amount(self):
+    def validate_allowable_amount(self, is_update=False):
         effective_date = frappe.get_value(
             'Loan Plan', self.loan_plan, 'effective_from'
         )
@@ -103,6 +103,9 @@ class MicrofinanceLoan(Document):
             map(pick('name'), _existing_loans_by(self.customer)),
             self.loan_principal
         )
+        if is_update:
+            before = self.get_doc_before_save()
+            tentative_outstanding -= before.loan_principal
         if tentative_outstanding > flt(allowed.get('principal')):
             frappe.throw(
                 "Customer already has existing loans. "
@@ -160,4 +163,4 @@ class MicrofinanceLoan(Document):
         before = self.get_doc_before_save()
         if before.loan_principal != self.loan_principal \
                 or before.recovery_amount != self.recovered_amount:
-            self.validate_allowable_amount()
+            self.validate_allowable_amount(is_update=True)
