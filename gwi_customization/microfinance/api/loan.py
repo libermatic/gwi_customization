@@ -4,21 +4,18 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import getdate, get_last_day, add_months, flt, rounded
+from frappe.utils import getdate, get_last_day, add_months, flt, rounded, cint
 from functools import partial
 from gwi_customization.microfinance.utils.fp import join, compose, pick
 from gwi_customization.microfinance.utils import month_diff, calc_interest
 
 
-@frappe.whitelist()
-def get_undisbursed_principal(loan):
-    """Gets undisbursed principal"""
-    principal, loan_account = frappe.get_value(
-        'Microfinance Loan',
-        loan,
-        ['loan_principal', 'loan_account'],
+def get_disbursed(loan):
+    """Gets disbursed principal"""
+    loan_account = frappe.get_value(
+        'Microfinance Loan', loan, 'loan_account'
     )
-    if not principal or not loan_account:
+    if not loan_account:
         raise frappe.DoesNotExistError("Loan: {} not found".format(loan))
     conds = [
         "account = '{}'".format(loan_account),
@@ -26,14 +23,22 @@ def get_undisbursed_principal(loan):
         "against_voucher_type = 'Microfinance Loan'",
         "against_voucher = '{}'".format(loan)
     ]
-    disbursed = frappe.db.sql(
+    return frappe.db.sql(
         """
-            SELECT sum(debit)
-            FROM `tabGL Entry`
-            WHERE {}
+            SELECT sum(debit) FROM `tabGL Entry` WHERE {}
         """.format(" AND ".join(conds))
     )[0][0] or 0
-    return principal - disbursed
+
+
+@frappe.whitelist()
+def get_undisbursed_principal(loan):
+    """Gets undisbursed principal"""
+    principal = frappe.get_value(
+        'Microfinance Loan', loan, 'loan_principal'
+    )
+    if not principal:
+        raise frappe.DoesNotExistError("Loan: {} not found".format(loan))
+    return principal - get_disbursed(loan)
 
 
 def get_recovered_principal(loan):
@@ -169,3 +174,17 @@ def calculate_principal(income, loan_plan, end_date, execution_date):
         'recovery_amount': rounded(recovery_amount, 2),
         'initial_interest': rounded(initial_interest, 2),
     }
+
+
+@frappe.whitelist()
+def update_amounts(name, principal_amount=None, recovery_amount=None):
+    loan = frappe.get_doc('Microfinance Loan', name)
+    if loan.docstatus != 1:
+        frappe.throw('Can only execute on submitted loans')
+    if cint(principal_amount) < get_disbursed(name):
+        frappe.throw('Cannot set principal less than already disbursed amount')
+    if principal_amount:
+        loan.update({'loan_principal': principal_amount})
+    if recovery_amount:
+        loan.update({'recovery_amount': recovery_amount})
+    loan.save()
