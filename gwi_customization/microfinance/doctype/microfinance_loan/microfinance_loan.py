@@ -155,3 +155,6 @@ class MicrofinanceLoan(Document):
         self.recovery_status = 'Not Started'
         # set to the first of the following month
         self.billing_start_date = add_days(get_last_day(self.posting_date), 1)
+
+    def before_update_after_submit(self):
+        self.validate_allowable_amount()

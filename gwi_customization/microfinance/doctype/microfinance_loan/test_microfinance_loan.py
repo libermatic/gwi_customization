@@ -7,9 +7,6 @@ import frappe
 import unittest
 from gwi_customization.microfinance.doctype.microfinance_loanee.\
     test_microfinance_loanee import create_test_loanee, remove_test_loanee
-# from gwi_customization.microfinance.doctype.microfinance_disbursement.\
-#     test_microfinance_disbursement \
-#     import create_test_disbursement, remove_test_disbursement
 
 test_dependencies = ['Microfinance Loan Plan']
 
@@ -117,6 +114,22 @@ class TestMicrofinanceLoan(unittest.TestCase):
         frappe.delete_doc(
             'Microfinance Disbursement', name=disbursement.name, force=True
         )
+
+    def test_raises_when_validation_fails_on_update(self):
+        create_test_loanee(
+            customer_name='_Test Loanee 1',
+            date_of_retirement='2018-12-12',
+            net_salary_amount=3000.0,
+        )
+        loan = create_test_loan(
+            skip_dependencies=True,
+            posting_date='2017-12-01',
+            loan_principal=10000.0,
+            recovery_amount=1500.0,
+        )
+        with self.assertRaises(frappe.exceptions.ValidationError):
+            loan.update({'loan_principal': 11001.0})
+            loan.save()
 
 
 def create_test_loan(**kwargs):
