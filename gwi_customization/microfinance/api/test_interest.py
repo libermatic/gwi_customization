@@ -25,6 +25,7 @@ class TestInterest(unittest.TestCase):
             'end_date': '2017-08-31',
             'billed_amount': 2000.0,
             'outstanding_amount': 1500.0,
+            'ref_interest': None,
         }
         self.assertEqual(expected, actual)
 
