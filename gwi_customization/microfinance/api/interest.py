@@ -195,19 +195,17 @@ def list(loan, from_date, to_date):
 
     get_item = compose(existing_dict.get, partial(make_name, loan))
     make_item = compose(_make_list_item, get_item)
-    loan_date = frappe.get_value('Microfinance Loan', loan, 'posting_date')
+    loan_end_date, loan_start_date = frappe.get_value(
+        'Microfinance Loan', loan, ['clear_date', 'posting_date']
+    )
 
     def make_empty(d):
         return {
             'name': make_name(loan, d),
             'period': d.strftime('%b %Y'),
-            'start_date': max(loan_date, d),
+            'start_date': max(loan_start_date, d),
             'status': 'Unbilled'
         }
-
-    dates = compose(
-        partial(_gen_dates, to_date=to_date), partial(max, loan_date), getdate,
-    )(from_date)
 
     effective_date = frappe.get_value(
         'Microfinance Loan Settings', None, 'effective_date'
@@ -223,6 +221,11 @@ def list(loan, from_date, to_date):
         return update({
             'status': status,
         })(row)
+
+    fd = compose(partial(max, loan_start_date), getdate)
+    td = compose(partial(min, loan_end_date), getdate) \
+        if loan_end_date else getdate
+    dates = _gen_dates(fd(from_date), td(to_date))
 
     return compose(
         partial(map, change_status),
