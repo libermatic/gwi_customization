@@ -10,7 +10,8 @@ from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
     import get_bank_cash_account
-from gwi_customization.microfinance.api.loan import update_recovery_status
+from gwi_customization.microfinance.api.loan \
+    import update_recovery_status, get_outstanding_principal
 from gwi_customization.microfinance.api.interest \
     import allocate_interests, make_name
 from gwi_customization.microfinance.utils.fp import compose, update, join, pick
@@ -57,11 +58,19 @@ class MicrofinanceRecovery(AccountsController):
             self.loan, self.posting_date, self.total_interests
         ):
             self.append('periods', period)
+        expected_outstanding = self.principal_amount + compose(
+            sum,
+            partial(map, pick('outstanding_amount')),
+            partial(filter, lambda x: x.ref_interest is not None)
+        )(self.periods)
+        if expected_outstanding > get_outstanding_principal(self.loan):
+            frappe.throw('Cannot receive more than the current outstanding')
 
     def before_submit(self):
         interest_names = self.make_interests()
         for idx, item in enumerate(self.periods):
-            item.ref_interest = interest_names[idx]
+            if not item.ref_interest:
+                item.ref_interest = interest_names[idx]
 
     def on_submit(self):
         self.make_gl_entries()

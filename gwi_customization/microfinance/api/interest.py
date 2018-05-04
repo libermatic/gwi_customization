@@ -21,6 +21,7 @@ def _interest_to_period(interest):
         'end_date': interest.get('end_date'),
         'billed_amount': billed_amount,
         'outstanding_amount': billed_amount - paid_amount,
+        'ref_interest': interest.get('name'),
     }
 
 
@@ -52,7 +53,8 @@ def get_unpaid(loan):
     return frappe.db.sql(
         """
             SELECT
-                loan, posting_date, period, start_date, end_date,
+                name, loan, posting_date,
+                period, start_date, end_date,
                 billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest`
             WHERE loan='{loan}' AND status != 'Clear'
