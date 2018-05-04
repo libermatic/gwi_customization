@@ -141,6 +141,69 @@ class TestMicrofinanceDisbursement(unittest.TestCase):
             self.assertEquals(exp_gle[gle.account][2], gle.credit)
             self.assertEquals(exp_gle[gle.account][3], gle.against)
 
+    def test_on_existing_interest(self):
+        loan = create_test_loan(
+            loan_no='_Test Loan 1', posting_date='2017-08-19'
+        )
+        create_test_disbursement(
+            skip_dependencies=True,
+            loan=loan.loan_no,
+            amount=50000.0,
+            posting_date='2017-08-20',
+        )
+        interests = [
+            {
+                'posting_date': '2017-09-01',
+                'start_date': '2017-08-19',
+                'end_date': '2017-08-31',
+                'period': 'Aug 2017',
+            },
+            {
+                'posting_date': '2017-10-01',
+                'start_date': '2017-09-01',
+                'end_date': '2017-09-30',
+                'period': 'Sep 2017',
+            }
+        ]
+        interest_docs = []
+        for interest in interests:
+            interest.update({
+                'doctype': 'Microfinance Loan Interest',
+                'loan': loan.loan_no,
+            })
+            doc = frappe.get_doc(interest)
+            doc.save()
+            doc.submit()
+            interest_docs.append(doc.name)
+
+        self.assertEqual(
+            frappe.get_value(
+                'Microfinance Loan Interest',
+                '_Test Loan 1/2017-09',
+                'billed_amount',
+            ),
+            6000,
+        )
+        create_test_disbursement(
+            skip_dependencies=True,
+            loan=loan.loan_no,
+            amount=50000.0,
+            posting_date='2017-09-20',
+        )
+        billed_amount = frappe.get_value(
+            'Microfinance Loan Interest',
+            '_Test Loan 1/2017-09',
+            'billed_amount',
+        )
+        self.assertEqual(billed_amount, 11000)
+
+        for docname in interest_docs:
+            doc = frappe.get_doc('Microfinance Loan Interest', docname)
+            doc.cancel()
+            frappe.delete_doc(
+                doctype='Microfinance Loan Interest', name=docname, force=True
+            )
+
 
 def create_test_disbursement(**kwargs):
     args = frappe._dict(kwargs)

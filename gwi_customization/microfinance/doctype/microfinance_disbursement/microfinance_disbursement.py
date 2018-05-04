@@ -11,6 +11,8 @@ from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice \
     import get_bank_cash_account
 from gwi_customization.microfinance.api.loan import get_undisbursed_principal
+from gwi_customization.microfinance.api.interest \
+    import make_name, recalculate_billed_amount
 
 
 class MicrofinanceDisbursement(AccountsController):
@@ -39,6 +41,7 @@ class MicrofinanceDisbursement(AccountsController):
 
     def on_submit(self):
         self.make_gl_entries()
+        self.update_existing_interest()
         self.update_loan_status()
 
     def on_cancel(self):
@@ -131,6 +134,11 @@ class MicrofinanceDisbursement(AccountsController):
                 'remarks': 'Payment received against service charges',
             })
         ]
+
+    def update_existing_interest(self):
+        interest = make_name(self.loan, self.posting_date)
+        if frappe.db.exists('Microfinance Loan Interest', interest):
+            recalculate_billed_amount(interest)
 
     def update_loan_status(self):
         """Method to update disbursement_status of Loan"""
