@@ -40,17 +40,17 @@ class MicrofinanceLoanInterest(AccountsController):
         before = self.get_doc_before_save()
         if self.billed_amount != before.billed_amount:
             if self.paid_amount > self.billed_amount:
-                frappe.throw('Paid amount cannot exceed billed amount')
+                frappe.throw('Paid interest cannot exceed billed amount')
             if before.fine_amount:
                 frappe.throw('Period already has been fined')
             self.status = self.get_status()
         if self.paid_amount != before.paid_amount:
             if self.paid_amount > self.billed_amount:
-                frappe.throw('Paid amount cannot exceed billed amount')
+                frappe.throw('Paid interest cannot exceed billed amount')
             self.status = self.get_status()
         if self.fine_amount != before.fine_amount:
             if self.paid_amount == self.billed_amount:
-                frappe.throw('No unpaid amount to make late charges')
+                frappe.throw('No unpaid interest to make late charges for')
             if before.fine_amount:
                 frappe.throw('Period has already been fined')
             if self.fine_amount > 0:
