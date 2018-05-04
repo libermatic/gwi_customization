@@ -16,7 +16,9 @@
     <tr>
       <td>{{ data[i]["period"] }}</td>
       <td>{{ frappe.datetime.str_to_user(data[i]["posting_date"]) }}</td>
-      <td>{{ data[i]["status"] }}</td>
+      <td>
+        <span class="indicator {{ data[i].indicator }}">{{ data[i]["status"] }}</span>
+      </td>
       <td class="text-right">
         {{ format_currency(
           data[i]["billed_amount"],

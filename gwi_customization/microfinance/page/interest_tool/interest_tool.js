@@ -55,6 +55,15 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
     Fined: ['unfine'],
     WroteOff: [],
   };
+  const colors_by_status = {
+    Unbilled: 'darkgrey',
+    Billed: 'green',
+    BilledFined: 'green',
+    Pending: 'orange',
+    Clear: 'blue',
+    Fined: 'red',
+    WroteOff: 'blue',
+  };
 
   function render_buttons(status) {
     const dialog_actions_html = $(
@@ -151,9 +160,15 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
           'loan_plan',
         ]),
       ]);
-      result_html
-        .removeClass('hidden')
-        .html(frappe.render_template('interest_list', { loan, data }));
+      result_html.removeClass('hidden').html(
+        frappe.render_template('interest_list', {
+          loan,
+          data: data.map(x => ({
+            indicator: colors_by_status[x.status],
+            ...x,
+          })),
+        })
+      );
       data.forEach(({ name, status, fine_wrote_off }) => {
         const btn = result_html.find(`button[name='${name}']`);
         if (status === 'Clear' || fine_wrote_off) {
