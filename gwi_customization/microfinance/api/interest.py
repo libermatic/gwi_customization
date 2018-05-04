@@ -232,8 +232,6 @@ def list(loan, from_date, to_date):
 
 @frappe.whitelist()
 def create(loan, period, start_date, billed_amount=None):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     if 'System Manager' not in frappe.permissions.get_roles():
         prev = compose(
             partial(frappe.db.exists, 'Microfinance Loan Interest'),
@@ -270,8 +268,6 @@ def _has_next_interest(interest):
 
 @frappe.whitelist()
 def edit(name, billed_amount=0):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     if not billed_amount:
         return frappe.throw('Billed amount cannot be zero')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
@@ -283,8 +279,6 @@ def edit(name, billed_amount=0):
 
 @frappe.whitelist()
 def clear(name):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
     if _has_next_interest(interest):
         return frappe.throw('Interest for next interval already exists')
@@ -294,8 +288,6 @@ def clear(name):
 
 @frappe.whitelist()
 def remove(name):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
     if _has_next_interest(interest):
         return frappe.throw('Interest for next interval already exists')
@@ -306,8 +298,6 @@ def remove(name):
 
 @frappe.whitelist()
 def fine(name):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
     loan_start_date = frappe.get_value(
         'Microfinance Loan', interest.loan, 'posting_date'
@@ -329,8 +319,6 @@ def fine(name):
 
 @frappe.whitelist()
 def unfine(name):
-    if 'Loan Manager' not in frappe.permissions.get_roles():
-        return frappe.throw('Insufficient permission')
     interest = frappe.get_doc('Microfinance Loan Interest', name)
     if not interest.fine_amount:
         return frappe.throw('No late fines to undo')
