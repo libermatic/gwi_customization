@@ -69,6 +69,11 @@ frappe.ui.form.on('Microfinance Loan', {
           'Submit'
         );
       });
+      frm.page.add_menu_item(__('Interest Tool'), function() {
+        frappe.set_route('interest_tool', {
+          loan: frm.doc['name'],
+        });
+      });
     }
   },
   render_chart: function(frm) {

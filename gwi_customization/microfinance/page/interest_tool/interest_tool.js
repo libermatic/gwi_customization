@@ -35,6 +35,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   fg.fields_dict['result_html'].$wrapper
     .css('overflow', 'auto')
     .addClass('hidden');
+  wrapper.fg = fg;
 
   const dialog = new frappe.ui.Dialog({
     fields: [
@@ -215,4 +216,11 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
     fg.fields_dict['result_html'].$wrapper.empty().addClass('hidden');
     fg.set_values({ loan: null });
   });
+};
+
+frappe.pages['interest_tool'].refresh = function({ fg }) {
+  if (frappe.route_options && frappe.route_options['loan']) {
+    fg.set_value('loan', frappe.route_options['loan']);
+    fg.fields_dict['result_html'].$wrapper.empty().addClass('hidden');
+  }
 };
