@@ -32,18 +32,24 @@ def _result_to_data(row):
 
 
 def _display_filter(display):
-    npa_duration = frappe.get_value(
-        'Microfinance Loan Settings', None, 'npa_duration'
-    )
     npa_date = compose(
-        getdate, partial(add_months, today()), neg, cint
-    )(npa_duration)
+        getdate,
+        partial(add_months, today()),
+        neg,
+        cint,
+        partial(frappe.get_value, 'Microfinance Loan Settings', None),
+    )('npa_duration')
 
     def fn(row):
+        loan_start_date = row[-1]
+        last_recovery_date = row[3]
+        recovery_status = row[2]
         if display == 'NPA Only':
-            return row[-1] < npa_date and row[3] < npa_date
+            date_to_check = max(loan_start_date, last_recovery_date) \
+                if last_recovery_date else loan_start_date
+            return date_to_check < npa_date
         if display == 'Existing Loans':
-            return row[2] in ['Not Started', 'In Progress']
+            return recovery_status in ['Not Started', 'In Progress']
         return True
     return fn
 
