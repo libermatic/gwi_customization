@@ -67,6 +67,18 @@ class MicrofinanceRecovery(AccountsController):
             frappe.throw('Cannot receive more than the current outstanding')
 
     def before_submit(self):
+        sum_allocated = compose(
+            sum,
+            partial(map, pick('allocated_amount'))
+        )
+        # validation for quirk when total_interests field is cleared and
+        # Submit button is still being rendered instead of being changed to
+        # Save
+        if self.total_interests != sum_allocated(self.periods):
+            frappe.throw(
+                'Interests and total allocated do not match. '
+                'Please refresh the page or update the interest'
+            )
         interest_names = self.make_interests()
         for idx, item in enumerate(self.periods):
             if not item.ref_interest:
