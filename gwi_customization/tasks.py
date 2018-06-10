@@ -29,14 +29,15 @@ def _interest_does_not_exists(d):
     )
 
 
-def _create_interest_on(loan, posting_date):
+def _create_interest_on(loan, posting_date, period_date=None):
     interest = frappe.new_doc('Microfinance Loan Interest')
+    p_date = period_date if period_date else add_months(posting_date, -1)
     interest.update({
         'loan': loan,
         'posting_date': posting_date,
-        'period': getdate(posting_date).strftime('%b %Y'),
-        'start_date': get_first_day(posting_date),
-        'end_date': get_last_day(posting_date),
+        'period': getdate(p_date).strftime('%b %Y'),
+        'start_date': get_first_day(p_date),
+        'end_date': get_last_day(p_date),
     })
     interest.insert()
     interest.submit()
