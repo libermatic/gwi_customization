@@ -60,7 +60,7 @@ def _get_interests(end_date):
         'Microfinance Loan Interest',
         filters=[
             ['docstatus', '=', '1'],
-            ['status', 'in', 'Clear, Fined'],
+            ['status', 'not in', 'Clear, Fined'],
             ['end_date', '=', end_date]
         ],
     )
