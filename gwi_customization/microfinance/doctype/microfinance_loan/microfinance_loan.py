@@ -60,6 +60,8 @@ def _reduce_outstanding_by(posting_date):
 
 class MicrofinanceLoan(Document):
     def validate(self):
+        # sanitized because '/' is used in Microfinance Loan Interest name
+        self.name = self.name.replace('/', '_')
         if self.recovery_amount > self.loan_principal:
             frappe.throw("Recovery Amount cannot exceed Principal.")
         self.validate_allowable_amount()
