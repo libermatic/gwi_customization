@@ -45,8 +45,12 @@ def _create_interest_on(loan, posting_date, period_date=None):
 
 
 def generate_interest(posting_date):
+    not_exists_filter = compose(
+        _interest_does_not_exists,
+        partial(add_months, months=-1)
+    )
     get_loans = compose(
-        partial(filter, _interest_does_not_exists(posting_date)),
+        partial(filter, not_exists_filter(posting_date)),
         partial(map, pick('name')),
         _get_active_loans_after,
     )
