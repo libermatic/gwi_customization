@@ -77,19 +77,12 @@ frappe.ui.form.on('Microfinance Loan', {
     }
   },
   render_chart: function(frm) {
-    const chart_area = frm.$wrapper.find('.form-graph');
+    const chart_area = frm.$wrapper.find('.form-graph').removeClass('hidden');
     const chart = new frappeChart.Chart(chart_area[0], {
       type: 'percentage',
       data: frm.doc.__onload['chart_data'],
       colors: ['green', 'orange', 'blue', 'grey'],
     });
-    chart_area.removeClass('hidden');
-    $(chart.container)
-      .find('.title')
-      .addClass('hidden');
-    $(chart.container)
-      .find('.sub-title')
-      .addClass('hidden');
   },
   clear_chart: function(frm) {
     frm.$wrapper
