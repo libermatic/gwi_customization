@@ -4,7 +4,7 @@
 frappe.ui.form.on('Microfinance Loan', {
   refresh: async function(frm) {
     frm.trigger('clear_chart');
-    if (frm.doc.docstatus === 1) {
+    if (frm.doc.docstatus === 1 && frm.doc.__onload['chart_data']) {
       frm.trigger('render_chart');
     }
     frm.fields_dict['loan_account'].get_query = doc => ({
@@ -78,9 +78,7 @@ frappe.ui.form.on('Microfinance Loan', {
   },
   render_chart: function(frm) {
     const chart_area = frm.$wrapper.find('.form-graph');
-    chart_area.empty();
-    const chart = new Chart({
-      parent: chart_area[0],
+    const chart = new frappeChart.Chart(chart_area[0], {
       type: 'percentage',
       data: frm.doc.__onload['chart_data'],
       colors: ['green', 'orange', 'blue', 'grey'],

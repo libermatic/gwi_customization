@@ -99,11 +99,11 @@ def get_chart_data(loan_name):
 
     data = {
         'labels': [
-            'Recovered', 'Outstanding', 'Undisbursed', 'Wrote Off'
+            'RC', 'OS', 'UD', 'WO'
         ],
         'datasets': [
             {
-                'title': "Total",
+                'name': "Total",
                 'values': [recovered, outstanding, undisbursed, wrote_off]
             },
         ]
