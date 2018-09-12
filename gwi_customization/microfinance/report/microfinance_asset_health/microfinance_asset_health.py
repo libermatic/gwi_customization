@@ -47,7 +47,7 @@ def _display_filter(display):
         if display == 'NPA Only':
             date_to_check = max(loan_start_date, last_recovery_date) \
                 if last_recovery_date else loan_start_date
-            return date_to_check < npa_date
+            return recovery_status != 'Repaid' and date_to_check < npa_date
         if display == 'Existing Loans':
             return recovery_status in ['Not Started', 'In Progress']
         return True
