@@ -9,7 +9,7 @@ from frappe.utils \
 from functools import partial, reduce
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.utils import calc_interest
-from gwi_customization.microfinance.utils.fp import update, join, compose
+from gwi_customization.microfinance.utils.fp import update, join, compose, pick
 
 
 def _interest_to_period(interest):
@@ -376,3 +376,20 @@ def recalculate_billed_amount(name):
         outstanding, rate_of_interest, calculation_slab
     )
     interest.run_method('update_billed_amount', billed_amount)
+
+
+def update_advance_interests(loan, posting_date):
+    adv_interests = map(
+        pick('name'),
+        frappe.get_all(
+            'Microfinance Loan Interest',
+            filters=[
+                ['loan', '=', loan]
+                ['end_date', '>=', posting_date],
+            ],
+            order_by='end_date',
+        )
+    )
+    for interest in adv_interests:
+        doc = frappe.get_doc('Microfinance Loan Interest', interest)
+        doc.adjust_billed_amount(posting_date)
