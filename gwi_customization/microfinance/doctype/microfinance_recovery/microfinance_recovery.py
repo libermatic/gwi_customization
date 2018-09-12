@@ -85,6 +85,7 @@ class MicrofinanceRecovery(AccountsController):
 
     def on_submit(self):
         self.make_principal_and_charges_gl_entries()
+        self.update_advance_interests()
         interest_names = self.make_interests()
         for idx, item in enumerate(self.periods):
             if not item.ref_interest:
@@ -206,3 +207,18 @@ class MicrofinanceRecovery(AccountsController):
                 ),
             ),
         )(self.periods)
+
+    def update_advance_interests(self):
+        adv_interests = map(
+            pick('name'),
+            frappe.get_all(
+                'Microfinance Loan Interest',
+                filters=[
+                    ['end_date', '>=', self.posting_date],
+                ],
+                order_by='end_date',
+            )
+        )
+        for interest in adv_interests:
+            doc = frappe.get_doc('Microfinance Loan Interest', interest)
+            doc.adjust_billed_amount(self.posting_date)
