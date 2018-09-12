@@ -50,14 +50,6 @@ def _existing_loans_by(customer):
     )
 
 
-def _reduce_outstanding_by(posting_date):
-    def fn(a, x):
-        return a + partial(
-            get_outstanding_principal, posting_date=posting_date
-        )(x)
-    return fn
-
-
 class MicrofinanceLoan(Document):
     def validate(self):
         # sanitized because '/' is used in Microfinance Loan Interest name
@@ -89,31 +81,31 @@ class MicrofinanceLoan(Document):
         )
         loan_principal = flt(self.loan_principal)
         recovery_amount = flt(self.recovery_amount)
-        if loan_principal > flt(allowed.get('principal')):
+        if loan_principal > allowed.get('principal'):
             frappe.throw(
                 "Requested principal cannot exceed {}".format(
                     _fmt_money(allowed.get('principal'))
                 )
             )
-        if recovery_amount < loan_principal / allowed.get('duration'):
-            frappe.throw(
-                "Recovery Amount cannot be less than {}".format(
-                    _fmt_money(self.loan_principal / allowed.get('duration'))
-                )
-            )
         tentative_outstanding = reduce(
-            _reduce_outstanding_by(self.posting_date),
+            lambda a, x: a + get_outstanding_principal(x),
             map(pick('name'), _existing_loans_by(self.customer)),
             loan_principal
         )
         if is_update:
             before = self.get_doc_before_save()
             tentative_outstanding -= before.loan_principal
-        if tentative_outstanding > flt(allowed.get('principal')):
+        if tentative_outstanding > allowed.get('principal'):
             frappe.throw(
                 "Customer already has existing loans. "
                 "Total principal would exceed allowed {}".format(
                     _fmt_money(allowed.get('principal')),
+                )
+            )
+        if recovery_amount < tentative_outstanding / allowed.get('duration'):
+            frappe.throw(
+                "Recovery Amount cannot be less than {}".format(
+                    _fmt_money(loan_principal / allowed.get('duration'))
                 )
             )
 
