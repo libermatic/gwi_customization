@@ -66,6 +66,17 @@ class MicrofinanceLoanInterest(AccountsController):
             delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
             self.make_gl_entries(self.billed_amount)
 
+    def adjust_billed_amount(self, posting_date):
+        prev_billed = self.billed_amount
+        self.billed_amount = self.get_billed_amount()
+        if prev_billed != self.billed_amount:
+            self.save()
+            self.make_gl_entries(
+                self.billed_amount - prev_billed,
+                posting_date=posting_date,
+                remarks='Adjustment to Interest for {}'.format(self.period),
+            )
+
     def get_billed_amount(self):
         outstanding_principal = get_outstanding_principal(
             self.loan, self.end_date
