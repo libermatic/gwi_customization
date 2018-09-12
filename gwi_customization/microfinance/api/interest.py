@@ -177,7 +177,7 @@ def _make_list_item(row):
     fine_wrote_off = get_fine_write_off(row.name) > 0 if row.fine_amount \
         else False
     return update({
-        'outstanding_amount': row.billed_amount - row.paid_amount,
+        'outstanding_amount': max(row.billed_amount - row.paid_amount, 0),
         'fine_wrote_off': fine_wrote_off,
     })(row)
 

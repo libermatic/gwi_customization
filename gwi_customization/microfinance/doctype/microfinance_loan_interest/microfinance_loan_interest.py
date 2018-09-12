@@ -150,5 +150,5 @@ class MicrofinanceLoanInterest(AccountsController):
             return 'Billed'
         if self.paid_amount < self.billed_amount:
             return 'Pending'
-        if self.paid_amount == self.billed_amount:
+        if self.paid_amount >= self.billed_amount:
             return 'Clear'
