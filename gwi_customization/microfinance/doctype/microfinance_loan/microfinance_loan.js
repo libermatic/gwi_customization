@@ -74,6 +74,18 @@ frappe.ui.form.on('Microfinance Loan', {
           loan: frm.doc['name'],
         });
       });
+      frm.page.add_menu_item(__('New Loan Query'), async function() {
+        const { message: service } = await frappe.call({
+          method:
+            'gwi_customization.microfinance.api.loanee.get_service_details',
+          args: { customer: frm.doc['customer'] },
+        });
+        frappe.set_route('calculate_principal', {
+          income: service['net_salary_amount'],
+          end_date: service['date_of_retirement'],
+          loan_plan: frm.doc['loan_plan'],
+        });
+      });
     }
   },
   render_chart: function(frm) {

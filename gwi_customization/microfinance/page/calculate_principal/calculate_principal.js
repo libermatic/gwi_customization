@@ -27,6 +27,7 @@ frappe.pages['calculate_principal'].on_page_load = function(wrapper) {
     parent: page.body,
   });
   fg.make();
+  wrapper.fg = fg;
   const rh = $(fg.fields_dict['result_html'].wrapper);
   rh.css('overflow', 'auto').addClass('hidden');
   page.set_primary_action('Calculate', async function() {
@@ -46,4 +47,13 @@ frappe.pages['calculate_principal'].on_page_load = function(wrapper) {
     fg.set_values({ income: null, end_date: null, loan_plan: null });
   });
   frappe.breadcrumbs.add('Microfinance');
+};
+
+frappe.pages['calculate_principal'].refresh = function({ fg }) {
+  if (frappe.route_options) {
+    const { income, end_date, loan_plan } = frappe.route_options;
+    fg.set_value('income', income);
+    fg.set_value('end_date', end_date);
+    fg.set_value('loan_plan', loan_plan);
+  }
 };
