@@ -361,30 +361,13 @@ def unfine(name):
     return interest
 
 
-def recalculate_billed_amount(name):
-    interest = frappe.get_doc('Microfinance Loan Interest', name)
-    outstanding = get_outstanding_principal(
-        loan=interest.loan,
-        posting_date=interest.end_date,
-    )
-    calculation_slab, rate_of_interest = frappe.get_value(
-        'Microfinance Loan',
-        interest.loan,
-        ['calculation_slab', 'rate_of_interest'],
-    )
-    billed_amount = calc_interest(
-        outstanding, rate_of_interest, calculation_slab
-    )
-    interest.run_method('update_billed_amount', billed_amount)
-
-
 def update_advance_interests(loan, posting_date):
     adv_interests = map(
         pick('name'),
         frappe.get_all(
             'Microfinance Loan Interest',
             filters=[
-                ['loan', '=', loan]
+                ['loan', '=', loan],
                 ['end_date', '>=', posting_date],
             ],
             order_by='end_date',
