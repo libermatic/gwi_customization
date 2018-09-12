@@ -9,7 +9,7 @@ from frappe.utils \
 from functools import partial, reduce
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.utils import calc_interest
-from gwi_customization.microfinance.utils.fp import update, join, compose
+from gwi_customization.microfinance.utils.fp import update, join, compose, pick
 
 
 def _interest_to_period(interest):
@@ -35,7 +35,7 @@ def _allocate(period, amount):
     return period
 
 
-def _generate_periods(init_date, interest_amount):
+def _generate_periods(init_date):
     start_date = getdate(init_date)
     while True:
         end_date = get_last_day(start_date)
@@ -43,10 +43,16 @@ def _generate_periods(init_date, interest_amount):
             'period_label': start_date.strftime('%b %Y'),
             'start_date': start_date,
             'end_date': end_date,
-            'billed_amount': interest_amount,
-            'outstanding_amount': interest_amount,
         }
         start_date = add_days(end_date, 1)
+
+
+def _is_advance(per, posting_date):
+    scheduled_pd = compose(
+        partial(add_days, days=1),
+        per.get,
+    )('end_date')
+    return getdate(posting_date) < getdate(scheduled_pd)
 
 
 def get_unpaid(loan):
@@ -80,7 +86,7 @@ def get_last(loan):
     return res[0] if res else None
 
 
-def allocate_interests(loan, posting_date, amount_to_allocate=0):
+def allocate_interests(loan, posting_date, amount_to_allocate=0, principal=0):
     periods = []
     to_allocate = amount_to_allocate
 
@@ -99,15 +105,27 @@ def allocate_interests(loan, posting_date, amount_to_allocate=0):
     interest_amount = calc_interest(
         outstanding_amount, rate_of_interest, calculation_slab
     )
+    adv_interest_amount = calc_interest(
+        outstanding_amount - principal, rate_of_interest, calculation_slab
+    )
     last = get_last(loan)
     effective_date = frappe.get_value(
         'Microfinance Loan Settings', None, 'effective_date'
     )
     init_date = add_days(last.get('end_date'), 1) if last \
         else max(loan_date, getdate(effective_date))
-    gen_per = _generate_periods(init_date, interest_amount)
+    gen_per = _generate_periods(init_date)
     while to_allocate > 0:
-        per = _allocate(gen_per.next(), to_allocate)
+        per_ = gen_per.next()
+        # for advance payments consider outstanding_amount to be minus
+        # the current principal to be paid
+        amount = adv_interest_amount \
+            if _is_advance(per_, posting_date) else interest_amount
+        per_.update({
+            'billed_amount': amount,
+            'outstanding_amount': amount,
+        })
+        per = _allocate(per_, to_allocate)
         periods.append(per)
         to_allocate -= per.get('allocated_amount')
     return filter(lambda x: x.get('allocated_amount') > 0, periods)
@@ -159,7 +177,7 @@ def _make_list_item(row):
     fine_wrote_off = get_fine_write_off(row.name) > 0 if row.fine_amount \
         else False
     return update({
-        'outstanding_amount': row.billed_amount - row.paid_amount,
+        'outstanding_amount': max(row.billed_amount - row.paid_amount, 0),
         'fine_wrote_off': fine_wrote_off,
     })(row)
 
@@ -343,18 +361,18 @@ def unfine(name):
     return interest
 
 
-def recalculate_billed_amount(name):
-    interest = frappe.get_doc('Microfinance Loan Interest', name)
-    outstanding = get_outstanding_principal(
-        loan=interest.loan,
-        posting_date=interest.end_date,
+def update_advance_interests(loan, posting_date):
+    adv_interests = map(
+        pick('name'),
+        frappe.get_all(
+            'Microfinance Loan Interest',
+            filters=[
+                ['loan', '=', loan],
+                ['end_date', '>=', posting_date],
+            ],
+            order_by='end_date',
+        )
     )
-    calculation_slab, rate_of_interest = frappe.get_value(
-        'Microfinance Loan',
-        interest.loan,
-        ['calculation_slab', 'rate_of_interest'],
-    )
-    billed_amount = calc_interest(
-        outstanding, rate_of_interest, calculation_slab
-    )
-    interest.run_method('update_billed_amount', billed_amount)
+    for interest in adv_interests:
+        doc = frappe.get_doc('Microfinance Loan Interest', interest)
+        doc.adjust_billed_amount(posting_date)

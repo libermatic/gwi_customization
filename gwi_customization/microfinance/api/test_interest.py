@@ -44,14 +44,10 @@ class TestInterest(unittest.TestCase):
         self.assertEqual(period.get('allocated_amount'), 1000.0)
 
     def test_generate_periods(self):
-        periods = _generate_periods('2017-08-19', 3000.0)
-        count = 0
+        periods = _generate_periods('2017-08-19')
         period = {}
-        while count < 4:
+        for _ in range(0, 4):
             period = periods.next()
-            count += 1
-        self.assertEqual(count, 4)
         self.assertEqual(period.get('period_label'), 'Nov 2017')
         self.assertEqual(period.get('start_date'), getdate('2017-11-01'))
         self.assertEqual(period.get('end_date'), getdate('2017-11-30'))
-        self.assertEqual(period.get('billed_amount'), 3000.0)

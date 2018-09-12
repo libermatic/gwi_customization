@@ -13,7 +13,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice \
 from gwi_customization.microfinance.api.loan \
     import update_recovery_status, get_outstanding_principal
 from gwi_customization.microfinance.api.interest \
-    import allocate_interests, make_name
+    import allocate_interests, make_name, update_advance_interests
 from gwi_customization.microfinance.utils.fp import compose, update, join, pick
 
 
@@ -55,7 +55,10 @@ class MicrofinanceRecovery(AccountsController):
         self.payment_account = account_dict.get('account')
         self.periods = []
         for period in allocate_interests(
-            self.loan, self.posting_date, self.total_interests
+            self.loan,
+            self.posting_date,
+            amount_to_allocate=self.total_interests,
+            principal=self.principal_amount,
         ):
             self.append('periods', period)
         expected_outstanding = self.principal_amount + compose(
@@ -79,18 +82,23 @@ class MicrofinanceRecovery(AccountsController):
                 'Interests and total allocated do not match. '
                 'Please refresh the page or update the interest'
             )
+
+    def on_submit(self):
+        self.make_principal_and_charges_gl_entries()
+        update_advance_interests(self.loan, self.posting_date)
         interest_names = self.make_interests()
         for idx, item in enumerate(self.periods):
             if not item.ref_interest:
                 item.ref_interest = interest_names[idx]
-
-    def on_submit(self):
-        self.make_gl_entries()
+        self.flags.ignore_validate_update_after_submit = True
+        self.save()
+        self.make_period_gl_entries()
         update_recovery_status(self.loan, self.posting_date)
 
     def on_cancel(self):
-        self.make_gl_entries(cancel=1)
+        self.make_period_gl_entries(cancel=1)
         self.make_interests(cancel=1)
+        self.make_principal_and_charges_gl_entries(cancel=1)
         update_recovery_status(self.loan, self.posting_date)
 
     def get_gl_dict(self, args):
@@ -101,14 +109,20 @@ class MicrofinanceRecovery(AccountsController):
         gl_dict.update(args)
         return super(MicrofinanceRecovery, self).get_gl_dict(gl_dict)
 
-    def make_gl_entries(self, cancel=0, adv_adj=0):
+    def make_principal_and_charges_gl_entries(self, cancel=0, adv_adj=0):
         gl_entries = []
         if self.principal_amount:
             gl_entries = self.add_loan_gl_entries(gl_entries)
-        if self.periods:
-            gl_entries = self.add_interest_gl_entries(gl_entries)
         if self.charges:
             gl_entries = self.add_charges_gl_entries(gl_entries)
+        make_gl_entries(
+            gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
+        )
+
+    def make_period_gl_entries(self, cancel=0, adv_adj=0):
+        gl_entries = []
+        if self.periods:
+            gl_entries = self.add_interest_gl_entries(gl_entries)
         make_gl_entries(
             gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
         )

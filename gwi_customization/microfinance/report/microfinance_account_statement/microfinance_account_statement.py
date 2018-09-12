@@ -80,7 +80,7 @@ def execute(filters={}):
             WHERE {conds}
             AND posting_date BETWEEN '{from_date}' AND '{to_date}'
             GROUP BY posting_date, account, voucher_no, remarks
-            ORDER BY posting_date, debit
+            ORDER BY posting_date ASC, name ASC
         """.format(
             conds=join(" AND ")(conds),
             from_date=filters.get('from_date'),
