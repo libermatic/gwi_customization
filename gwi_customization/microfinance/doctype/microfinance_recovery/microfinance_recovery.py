@@ -55,7 +55,10 @@ class MicrofinanceRecovery(AccountsController):
         self.payment_account = account_dict.get('account')
         self.periods = []
         for period in allocate_interests(
-            self.loan, self.posting_date, self.total_interests
+            self.loan,
+            self.posting_date,
+            amount_to_allocate=self.total_interests,
+            principal=self.principal_amount,
         ):
             self.append('periods', period)
         expected_outstanding = self.principal_amount + compose(
