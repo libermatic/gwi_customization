@@ -87,14 +87,15 @@ class MicrofinanceLoan(Document):
             end_date=date_of_retirement,
             execution_date=self.posting_date,
         )
-        if self.loan_principal > flt(allowed.get('principal')):
+        loan_principal = flt(self.loan_principal)
+        recovery_amount = flt(self.recovery_amount)
+        if loan_principal > flt(allowed.get('principal')):
             frappe.throw(
                 "Requested principal cannot exceed {}".format(
                     _fmt_money(allowed.get('principal'))
                 )
             )
-        if self.recovery_amount \
-                < self.loan_principal / allowed.get('duration'):
+        if recovery_amount < loan_principal / allowed.get('duration'):
             frappe.throw(
                 "Recovery Amount cannot be less than {}".format(
                     _fmt_money(self.loan_principal / allowed.get('duration'))
@@ -103,7 +104,7 @@ class MicrofinanceLoan(Document):
         tentative_outstanding = reduce(
             _reduce_outstanding_by(self.posting_date),
             map(pick('name'), _existing_loans_by(self.customer)),
-            self.loan_principal
+            loan_principal
         )
         if is_update:
             before = self.get_doc_before_save()
