@@ -76,9 +76,12 @@
     {% else %}
       its
     {% endif %}
-    <strong>{{ doc.loan_plan }}</strong> loan dues on <strong>{{
-        frappe.utils.formatdate(doc.clear_date, "d MMMM, YYYY")
-        or "[Not cleared]"
+    <strong>{{
+      frappe.db.get_value("Microfinance Loan Plan", doc.loan_plan, "plan_name")
+      or doc.loan_plan
+    }}</strong> loan dues on <strong>{{
+      frappe.utils.formatdate(doc.clear_date, "d MMMM, YYYY")
+      or "[Not cleared]"
     }}</strong> that was sanctioned on <strong>{{
       frappe.utils.formatdate(doc.posting_date, "d MMMM, YYYY")
     }}</strong> (Ref Loan No. <strong>{{ doc.name }}</strong>).
