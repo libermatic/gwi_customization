@@ -45,6 +45,12 @@ def _create_interest_on(loan, posting_date, period_date=None):
 
 
 def generate_interest(posting_date):
+    """
+        Returns a list of new interests posted on posting_date.
+
+        Processes all active loans which have an interest for the previous
+        period as this one.
+    """
     not_exists_filter = compose(
         _interest_does_not_exists,
         partial(add_months, months=-1)
@@ -78,6 +84,13 @@ def _set_fine(docname):
 
 
 def generate_late_fines(posting_date):
+    """
+        Returns a list of interests that were posted in the previous period
+        from the posting_date.
+
+        Processes all interests in the previous period what have outstanding
+        interest amounts.
+    """
     get_interests = compose(
         partial(map, pick('name')),
         _get_interests,
