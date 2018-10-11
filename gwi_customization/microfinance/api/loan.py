@@ -111,7 +111,7 @@ def get_chart_data(loan_name):
     return data
 
 
-def update_recovery_status(loan_name, posting_date):
+def update_recovery_status(loan_name, posting_date, status=None):
     """Method update recovery_status of Loan"""
     loan = frappe.get_doc('Microfinance Loan', loan_name)
     outstanding_principal = get_outstanding_principal(
@@ -125,7 +125,9 @@ def update_recovery_status(loan_name, posting_date):
         loan.recovery_status = 'Repaid'
     else:
         loan.clear_date = None
-        if outstanding_principal == loan.loan_principal:
+        if status:
+            loan.recovery_status = status
+        elif outstanding_principal == loan.loan_principal:
             loan.recovery_status = 'Not Started'
         else:
             loan.recovery_status = 'In Progress'
@@ -188,3 +190,26 @@ def update_amounts(name, principal_amount=None, recovery_amount=None):
     if recovery_amount:
         loan.update({'recovery_amount': recovery_amount})
     loan.save()
+
+
+@frappe.whitelist()
+def set_npa(loan, npa_date, final_amount, remarks=None):
+    loan_doc = frappe.get_doc('Microfinance Loan', loan)
+    if not loan_doc:
+        frappe.throw('Unable to find loan {}'.format(loan))
+    outstanding = get_outstanding_principal(loan, npa_date)
+    wo_amount = outstanding - flt(final_amount)
+    if wo_amount:
+        write_off = frappe.get_doc({
+            'doctype': 'Microfinance Write Off',
+            'loan': loan,
+            'posting_date': npa_date,
+            'amount': wo_amount,
+            'reason': remarks or 'Negotiated to {}'.format(
+                final_amount
+            ),
+            'write_off_type': 'NPA',
+        })
+        write_off.insert()
+        write_off.submit()
+    return wo_amount

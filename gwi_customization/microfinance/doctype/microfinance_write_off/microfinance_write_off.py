@@ -20,7 +20,11 @@ class MicrofinanceWriteOff(AccountsController):
 
     def on_submit(self):
         self.make_gl_entries()
-        update_recovery_status(self.loan, self.posting_date)
+        update_recovery_status(
+            self.loan,
+            self.posting_date,
+            status='NPA' if self.write_off_type == 'NPA' else None
+        )
 
     def on_cancel(self):
         self.make_gl_entries(cancel=1)

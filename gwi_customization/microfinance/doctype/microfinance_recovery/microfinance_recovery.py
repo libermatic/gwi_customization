@@ -41,6 +41,12 @@ _stringify_periods = compose(
 
 
 class MicrofinanceRecovery(AccountsController):
+    def validate(self):
+        if self.total_interests and 'NPA' == frappe.db.get_value(
+            'Microfinance Loan', self.loan, 'recovery_status'
+        ):
+            frappe.throw('Cannot recover interests for NPA loans')
+
     def before_save(self):
         self.total_amount = \
             flt(self.total_interests) + flt(self.principal_amount)

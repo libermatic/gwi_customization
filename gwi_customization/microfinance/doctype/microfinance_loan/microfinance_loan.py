@@ -7,7 +7,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, get_last_day, getdate, flt, fmt_money
 from frappe.contacts.doctype.address.address import get_default_address
-from functools import reduce, partial
+from functools import reduce
 from gwi_customization.microfinance.utils.fp import join, pick
 from gwi_customization.microfinance.api.loan import (
     get_chart_data,
@@ -116,6 +116,9 @@ class MicrofinanceLoan(Document):
         if self.docstatus == 1:
             self.set_onload(
                 'chart_data', get_chart_data(self.name)
+            )
+            self.set_onload(
+                'outstanding_principal', get_outstanding_principal(self.name)
             )
 
     def before_save(self):

@@ -16,6 +16,15 @@ class MicrofinanceLoanInterest(AccountsController):
     def autoname(self):
         self.name = make_name(self.loan, self.start_date)
 
+    def validate(self):
+        self.validate_loan_status()
+
+    def validate_loan_status(self):
+        if 'NPA' == frappe.db.get_value(
+            'Microfinance Loan', self.loan, 'recovery_status'
+        ):
+            frappe.throw('Cannot create or update interest for NPA loans')
+
     def before_save(self):
         if not self.billed_amount:
             self.billed_amount = self.get_billed_amount()
@@ -30,6 +39,7 @@ class MicrofinanceLoanInterest(AccountsController):
         )
 
     def before_update_after_submit(self):
+        self.validate_loan_status()
         before = self.get_doc_before_save()
         if self.billed_amount != before.billed_amount:
             if before.fine_amount:
@@ -44,6 +54,9 @@ class MicrofinanceLoanInterest(AccountsController):
                 frappe.throw('Period has already been fined')
             if self.fine_amount > 0:
                 self.status = 'Fined'
+
+    def before_cancel(self):
+        self.validate_loan_status()
 
     def update_billed_amount(self, amount):
         self.billed_amount = amount
@@ -64,7 +77,10 @@ class MicrofinanceLoanInterest(AccountsController):
         )[0][0]
         if cur_billed != self.billed_amount:
             delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
-            self.make_gl_entries(self.billed_amount)
+            self.make_gl_entries(
+                self.billed_amount,
+                remarks='Interest for {}'.format(self.period),
+            )
 
     def adjust_billed_amount(self, posting_date):
         prev_billed = self.billed_amount
