@@ -77,7 +77,10 @@ class MicrofinanceLoanInterest(AccountsController):
         )[0][0]
         if cur_billed != self.billed_amount:
             delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
-            self.make_gl_entries(self.billed_amount)
+            self.make_gl_entries(
+                self.billed_amount,
+                remarks='Interest for {}'.format(self.period),
+            )
 
     def adjust_billed_amount(self, posting_date):
         prev_billed = self.billed_amount
