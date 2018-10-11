@@ -63,7 +63,7 @@ def get_unpaid(loan):
                 period, start_date, end_date,
                 billed_amount, paid_amount
             FROM `tabMicrofinance Loan Interest`
-            WHERE loan='{loan}' AND status != 'Clear'
+            WHERE loan='{loan}' AND status NOT IN ('Clear', 'Fined')
             ORDER BY start_date
         """.format(loan=loan),
         as_dict=True,
