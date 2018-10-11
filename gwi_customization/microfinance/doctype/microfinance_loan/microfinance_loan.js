@@ -86,6 +86,49 @@ frappe.ui.form.on('Microfinance Loan', {
           loan_plan: frm.doc['loan_plan'],
         });
       });
+      const npa_dialog = new frappe.ui.Dialog({
+        title: 'Set Loan as NPA',
+        fields: [
+          {
+            fieldname: 'npa_date',
+            label: 'NPA Date',
+            fieldtype: 'Date',
+            reqd: 1,
+            default: frappe.datetime.get_today(),
+          },
+          {
+            fieldname: 'final_amount',
+            label: 'Final Amount',
+            fieldtype: 'Currency',
+            reqd: 1,
+            default:
+              frm.doc.__onload && frm.doc.__onload['outstanding_principal'],
+          },
+          {
+            fieldname: 'remarks',
+            label: 'Remarks (Optional)',
+            fieldtype: 'Small Text',
+          },
+        ],
+        primary_action: async function() {
+          const values = npa_dialog.get_values();
+          const { message: wo_amount } = await frappe.call({
+            method: 'gwi_customization.microfinance.api.loan.set_npa',
+            args: Object.assign({}, values, { loan: frm.doc['name'] }),
+          });
+          npa_dialog.hide();
+          frm.reload_doc();
+          if (wo_amount) {
+            frappe.show_alert({
+              message: `Wrote off ${fmt_money(wo_amount)}`,
+              indicator: 'green',
+            });
+          }
+        },
+      });
+      frm.page.add_menu_item(__('Set as NPA'), function() {
+        npa_dialog.show();
+      });
     }
   },
   render_chart: function(frm) {

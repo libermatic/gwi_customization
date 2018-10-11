@@ -1,6 +1,9 @@
 frappe.listview_settings['Microfinance Loan'] = {
   add_fields: ['disbursement_status', 'recovery_status'],
   get_indicator: function({ disbursement_status, recovery_status }) {
+    if (recovery_status === 'NPA') {
+      return [__('NPA'), 'red', 'recovery_status,=,NPA'];
+    }
     if (disbursement_status === 'Sanctioned') {
       return [__('Sanctioned'), 'darkgrey', 'disbursement_status,=,Sanctioned'];
     }
