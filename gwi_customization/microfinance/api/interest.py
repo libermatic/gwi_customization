@@ -137,6 +137,13 @@ def make_name(loan, start_date):
 
 @frappe.whitelist()
 def get_current_interest(loan, posting_date):
+    calculation_slab, rate_of_interest, recovery_status = frappe.get_value(
+        'Microfinance Loan',
+        loan,
+        ['calculation_slab', 'rate_of_interest', 'recovery_status'],
+    )
+    if recovery_status == 'NPA':
+        return 0
     prev_billed_amount = compose(
         partial(
             frappe.get_value,
@@ -150,11 +157,6 @@ def get_current_interest(loan, posting_date):
     if prev_billed_amount:
         return prev_billed_amount
     outstanding = get_outstanding_principal(loan, posting_date)
-    calculation_slab, rate_of_interest = frappe.get_value(
-        'Microfinance Loan',
-        loan,
-        ['calculation_slab', 'rate_of_interest'],
-    )
     return calc_interest(
         outstanding, rate_of_interest, calculation_slab
     )
