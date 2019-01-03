@@ -110,9 +110,6 @@ class MicrofinanceLoan(Document):
             )
 
     def onload(self):
-        self.set_onload(
-            'address_text', _make_address_text(self.customer)
-        )
         if self.docstatus == 1:
             self.set_onload(
                 'chart_data', get_chart_data(self.name)
@@ -152,6 +149,7 @@ class MicrofinanceLoan(Document):
             self.interest_income_account = interest_income_account
 
     def before_submit(self):
+        self.address_text = _make_address_text(self.customer)
         self.disbursement_status = 'Sanctioned'
         self.recovery_status = 'Not Started'
         # set to the first of the following month
