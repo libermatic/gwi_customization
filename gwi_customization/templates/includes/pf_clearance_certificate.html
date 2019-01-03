@@ -9,6 +9,7 @@
     font-size: 1.2em;
     line-height: 2;
     margin-bottom: 1em;
+    text-indent: 3em;
   }
   .print-format .cert-signature {
     margin-top: 8em;
@@ -62,8 +63,8 @@
     This is to certify that <strong>{{
       loanee.get("salutation") or "" }} {{ loanee.get("customer_name")
     }}</strong>
-    {% if doc.__onload.get('address_text') %}
-      of <strong>{{ doc.__onload.get('address_text') }}</strong>
+    {% if doc.address_text %}
+      of <strong>{{ doc.address_text }}</strong>
     {% endif %}
     {% if loanee.get("department") %}
       in the department of <strong>{{ loanee.get("department") }}</strong>
