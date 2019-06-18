@@ -2,15 +2,15 @@
 from __future__ import unicode_literals
 from . import __version__
 
-app_name = 'gwi_customization'
+app_name = "gwi_customization"
 app_version = __version__
-app_title = 'GWI Customization'
-app_publisher = 'Libermatic'
-app_description = 'Customizations for GWI'
-app_icon = 'fa fa-university'
-app_color = '#8BC34A'
-app_email = 'info@libermatic.com'
-app_license = 'MIT'
+app_title = "GWI Customization"
+app_publisher = "Libermatic"
+app_description = "Customizations for GWI"
+app_icon = "fa fa-university"
+app_color = "#8BC34A"
+app_email = "info@libermatic.com"
+app_license = "MIT"
 
 # Includes in <head>
 # ------------------
@@ -57,7 +57,7 @@ app_include_js = "/assets/js/gwi_customization.min.js"
 
 # before_install = "gwi_customization.install.before_install"
 # after_install = "gwi_customization.install.after_install"
-setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
+setup_wizard_complete = "gwi_customization.install.after_wizard_complete"
 
 
 # Desk Notifications
@@ -85,24 +85,21 @@ setup_wizard_complete = 'gwi_customization.install.after_wizard_complete'
 # Hook on document methods and events
 
 doc_events = {
-    'Customer': {
-        'on_update':
-            'gwi_customization.microfinance.doctype.microfinance_loanee'
-            '.microfinance_loanee.on_customer_update',
+    "Customer": {
+        "on_update": "gwi_customization.microfinance.doctype.microfinance_loanee"
+        ".microfinance_loanee.on_customer_update"
     }
 }
 
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-    'monthly': ['gwi_customization.tasks.monthly']
-}
+scheduler_events = {"monthly": ["gwi_customization.tasks.monthly"]}
 
 # Testing
 # -------
 
-before_tests = 'gwi_customization.install.before_tests'
+before_tests = "gwi_customization.install.before_tests"
 
 # Overriding Whitelisted Methods
 # ------------------------------
