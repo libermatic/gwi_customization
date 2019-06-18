@@ -20,7 +20,7 @@ def get_data():
                     "label": "Loanee",
                     "description": _("Loanee details"),
                 },
-            ]
+            ],
         },
         {
             "label": _("Transactions"),
@@ -43,7 +43,7 @@ def get_data():
                     "label": "Write Off",
                     "description": _("Write offs to loan outstanding amounts"),
                 },
-            ]
+            ],
         },
         {
             "label": _("Reports"),
@@ -66,7 +66,7 @@ def get_data():
                     "name": "Microfinance Asset Health",
                     "label": "Asset Health",
                 },
-            ]
+            ],
         },
         {
             "label": _("Setup"),
@@ -81,9 +81,7 @@ def get_data():
                     "type": "doctype",
                     "name": "Microfinance Charge Type",
                     "label": "Loan Charge",
-                    "description": _(
-                        "Types of charges that could be applicable"
-                    ),
+                    "description": _("Types of charges that could be applicable"),
                 },
                 {
                     "type": "doctype",
@@ -91,7 +89,7 @@ def get_data():
                     "label": "Loan Settings",
                     "description": _("Global loan configuration"),
                 },
-            ]
+            ],
         },
         {
             "label": _("Tools"),
@@ -99,13 +97,24 @@ def get_data():
                 {
                     "type": "page",
                     "name": "calculate_principal",
-                    "label": _("Calculate Principal and Interest")
+                    "label": _("Calculate Principal and Interest"),
                 },
                 {
                     "type": "page",
                     "name": "interest_tool",
-                    "label": _("Interests and Charges")
+                    "label": _("Interests and Charges"),
                 },
-            ]
+            ],
+        },
+        {
+            "label": _("Audit"),
+            "items": [
+                {
+                    "type": "doctype",
+                    "name": "Audit Statement",
+                    "label": "Audit Statement",
+                    "description": _("Audit Statement"),
+                }
+            ],
         },
     ]
