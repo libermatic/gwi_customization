@@ -26,7 +26,6 @@ export default {
   display: flex;
   > div {
     width: 33%;
-    text-align: right;
   }
 }
 </style>
