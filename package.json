@@ -1,0 +1,23 @@
+{
+  "name": "gwi_customization",
+  "version": "0.0.4",
+  "description": "Customizations for GWI",
+  "main": "gwi_customization/public/js/index.js",
+  "dependencies": {
+    "lodash": "^4.17.11"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/libermatic/gwi_customization.git"
+  },
+  "author": "Sun Howwrongbum <sun@libermatic.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/libermatic/gwi_customization/issues"
+  },
+  "homepage": "https://github.com/libermatic/gwi_customization#readme"
+}
