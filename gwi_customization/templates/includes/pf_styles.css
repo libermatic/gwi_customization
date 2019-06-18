@@ -1,0 +1,9 @@
+.print-format dl {
+  display: flex;
+  flex-flow: row wrap;
+}
+.print-format dl > div {
+  padding: 0 0.5em;
+  width: 33%;
+  margin-bottom: 1em;
+}
