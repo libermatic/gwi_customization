@@ -1,6 +1,6 @@
 {
   "name": "gwi_customization",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Customizations for GWI",
   "main": "gwi_customization/public/js/index.js",
   "dependencies": {
