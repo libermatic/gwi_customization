@@ -1,0 +1,63 @@
+{%- if not no_letterhead -%}
+<header>{{ letter_head }}</header>
+{%- endif -%}
+<h2>Account Statement</h2>
+<dl>
+  <div>
+    <dt>Statement Generated On</dt>
+    <dd>{{ frappe.utils.now_datetime().strftime('%d-%m-%Y %I:%M:%S %p') }}</dd>
+  </div>
+  <div>
+    <dt>Loan Account No</dt>
+    <dd>{{ doc.name }}</dd>
+  </div>
+  <div>
+    <dt>Customer Name</dt>
+    <dd>{{ doc.customer_name }}</dd>
+    {%- if doc.customer_address -%}
+    <dd>{{ doc.customer_address }}</dd>
+    {%- endif -%}
+  </div>
+</dl>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Period</th>
+      <th class="text-right">Principal</th>
+      <th class="text-right">Interest</th>
+      <th class="text-right">Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%- for row in doc.transactions -%}
+    <tr>
+      <td>{{ row.period }}</td>
+      <td class="text-right">
+        {{ frappe.utils.fmt_money(row.principal) if row.principal else '-' }}
+      </td>
+      <td class="text-right">
+        {{ frappe.utils.fmt_money(row.interest) if row.interest else '-' }}
+      </td>
+      <td class="text-right">
+        {{ frappe.utils.fmt_money(row.balance) if row.balance else '-' }}
+      </td>
+    </tr>
+    {%- endfor -%}
+  </tbody>
+  <tfoot>
+    <tr>
+      <th>Total</th>
+      <th class="text-right">
+        {{ frappe.utils.fmt_money(doc.transactions|sum(attribute='principal'))
+        }}
+      </th>
+      <th class="text-right">
+        {{ frappe.utils.fmt_money(doc.transactions|sum(attribute='interest')) }}
+      </th>
+      <th class="text-right">
+        {%- set last_row = doc.transactions|last -%} {{
+        frappe.utils.fmt_money(last_row.balance if last_row else 0) }}
+      </th>
+    </tr>
+  </tfoot>
+</table>
