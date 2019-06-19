@@ -4,6 +4,6 @@
 }
 .print-format dl > div {
   padding: 0 0.5em;
-  width: 33%;
+  min-width: 50%;
   margin-bottom: 1em;
 }
