@@ -4,17 +4,19 @@
 <h2>Account Statement</h2>
 <dl>
   <div>
-    <dt>Customer</dt>
-    <dd>{{ doc.customer_name }}</dd>
-    {%- if doc.customer_address -%}
-    <dd>
-      <em>{{ doc.customer_address|replace('\n', '<br />') }}</em>
-    </dd>
-    {%- endif -%}
-  </div>
-  <div>
     <dt>Loan Account No</dt>
     <dd>{{ doc.name }}</dd>
+  </div>
+  <div>
+    <dt>Name of Customer</dt>
+    <dd>{{ doc.customer_name or '' }}</dd>
+  </div>
+  <div>
+    <dt>Address of Customer</dt>
+    <dd>
+      {{ doc.customer_address|replace('\n', '<br />') if doc.customer_address
+      else '' }}
+    </dd>
   </div>
 </dl>
 <table class="table table-bordered">
