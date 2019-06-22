@@ -49,7 +49,7 @@ class TestInterest(unittest.TestCase):
         periods = _generate_periods("2017-08-19")
         period = {}
         for _ in range(0, 4):
-            period = periods.next()
+            period = next(periods)
         self.assertEqual(period.get("period_label"), "Nov 2017")
         self.assertEqual(period.get("start_date"), getdate("2017-11-01"))
         self.assertEqual(period.get("end_date"), getdate("2017-11-30"))

@@ -116,7 +116,7 @@ def allocate_interests(loan, posting_date, amount_to_allocate=0, principal=0):
     )
     gen_per = _generate_periods(init_date)
     while to_allocate > 0:
-        per_ = gen_per.next()
+        per_ = next(gen_per)
         # for advance payments consider outstanding_amount to be minus
         # the current principal to be paid
         amount = (
