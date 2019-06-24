@@ -195,6 +195,7 @@ class MicrofinanceRecovery(AccountsController):
             pick("end_date"),
         )
         return compose(
+            list,
             partial(map, partial(_create_or_update_interest, update=cancel)),
             partial(
                 map,
