@@ -7,7 +7,8 @@ import frappe
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from gwi_customization.microfinance.api.loan import (
-    update_recovery_status, get_outstanding_principal
+    update_recovery_status,
+    get_outstanding_principal,
 )
 
 
@@ -23,7 +24,7 @@ class MicrofinanceWriteOff(AccountsController):
         update_recovery_status(
             self.loan,
             self.posting_date,
-            status='NPA' if self.write_off_type == 'NPA' else None
+            status="NPA" if self.write_off_type == "NPA" else None,
         )
 
     def on_cancel(self):
@@ -31,31 +32,25 @@ class MicrofinanceWriteOff(AccountsController):
         update_recovery_status(self.loan, self.posting_date)
 
     def get_gl_dict(self, args):
-        gl_dict = frappe._dict({
-            'against_voucher_type': 'Microfinance Loan',
-            'against_voucher': self.loan,
-        })
+        gl_dict = frappe._dict(
+            {"against_voucher_type": "Microfinance Loan", "against_voucher": self.loan}
+        )
         gl_dict.update(args)
         return super(MicrofinanceWriteOff, self).get_gl_dict(gl_dict)
 
     def make_gl_entries(self, cancel=0, adv_adj=0):
         cost_center, write_off_account = frappe.db.get_value(
-            'Microfinance Loan Settings',
-            None,
-            ['cost_center', 'write_off_account'],
+            "Microfinance Loan Settings", None, ["cost_center", "write_off_account"]
         )
         gl_entries = [
-            self.get_gl_dict({
-                'account': self.loan_account,
-                'credit': self.amount,
-            }),
-            self.get_gl_dict({
-                'account': write_off_account,
-                'debit': self.amount,
-                'cost_center': cost_center,
-                'remarks': self.reason,
-            }),
+            self.get_gl_dict({"account": self.loan_account, "credit": self.amount}),
+            self.get_gl_dict(
+                {
+                    "account": write_off_account,
+                    "debit": self.amount,
+                    "cost_center": cost_center,
+                    "remarks": self.reason,
+                }
+            ),
         ]
-        make_gl_entries(
-            gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False
-        )
+        make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False)

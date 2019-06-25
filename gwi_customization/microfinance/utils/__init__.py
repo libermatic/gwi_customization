@@ -13,6 +13,7 @@ def get_gle_by(voucher_type):
     """
         Build a function that returns GL Entries of a particular voucher_type
     """
+
     def fn(voucher_no):
         return frappe.db.sql(
             """
@@ -26,9 +27,12 @@ def get_gle_by(voucher_type):
                 WHERE voucher_type='{type}' AND voucher_no='{no}'
                 GROUP BY account
                 ORDER BY account ASC
-            """.format(type=voucher_type, no=voucher_no),
-            as_dict=1
+            """.format(
+                type=voucher_type, no=voucher_no
+            ),
+            as_dict=1,
         )
+
     return fn
 
 

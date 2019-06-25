@@ -10,6 +10,6 @@ def get_data():
             "color": "#8BC34A",
             "icon": "fa fa-university",
             "type": "module",
-            "label": _("Microfinance")
+            "label": _("Microfinance"),
         }
     ]

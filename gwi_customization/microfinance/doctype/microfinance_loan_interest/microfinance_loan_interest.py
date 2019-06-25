@@ -20,10 +20,10 @@ class MicrofinanceLoanInterest(AccountsController):
         self.validate_loan_status()
 
     def validate_loan_status(self):
-        if 'NPA' == frappe.db.get_value(
-            'Microfinance Loan', self.loan, 'recovery_status'
+        if "NPA" == frappe.db.get_value(
+            "Microfinance Loan", self.loan, "recovery_status"
         ):
-            frappe.throw('Cannot create or update interest for NPA loans')
+            frappe.throw("Cannot create or update interest for NPA loans")
 
     def before_save(self):
         if not self.billed_amount:
@@ -34,8 +34,7 @@ class MicrofinanceLoanInterest(AccountsController):
 
     def on_submit(self):
         self.make_gl_entries(
-            self.billed_amount,
-            remarks='Interest for {}'.format(self.period),
+            self.billed_amount, remarks="Interest for {}".format(self.period)
         )
 
     def before_update_after_submit(self):
@@ -43,17 +42,17 @@ class MicrofinanceLoanInterest(AccountsController):
         before = self.get_doc_before_save()
         if self.billed_amount != before.billed_amount:
             if before.fine_amount:
-                frappe.throw('Period already has been fined')
+                frappe.throw("Period already has been fined")
             self.status = self.get_status()
         if self.paid_amount != before.paid_amount:
             self.status = self.get_status()
         if self.fine_amount != before.fine_amount:
             if self.paid_amount == self.billed_amount:
-                frappe.throw('No unpaid interest to make late charges for')
+                frappe.throw("No unpaid interest to make late charges for")
             if before.fine_amount:
-                frappe.throw('Period has already been fined')
+                frappe.throw("Period has already been fined")
             if self.fine_amount > 0:
-                self.status = 'Fined'
+                self.status = "Fined"
 
     def before_cancel(self):
         self.validate_loan_status()
@@ -63,7 +62,7 @@ class MicrofinanceLoanInterest(AccountsController):
         self.save()
 
         interest_income_account = frappe.get_value(
-            'Microfinance Loan', self.loan, 'interest_income_account'
+            "Microfinance Loan", self.loan, "interest_income_account"
         )
         cur_billed = frappe.db.sql(
             """
@@ -71,15 +70,13 @@ class MicrofinanceLoanInterest(AccountsController):
                 FROM `tabGL Entry`
                 WHERE account = '{account}' AND voucher_no = '{voucher_no}'
             """.format(
-                account=interest_income_account,
-                voucher_no=self.name,
+                account=interest_income_account, voucher_no=self.name
             )
         )[0][0]
         if cur_billed != self.billed_amount:
             delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
             self.make_gl_entries(
-                self.billed_amount,
-                remarks='Interest for {}'.format(self.period),
+                self.billed_amount, remarks="Interest for {}".format(self.period)
             )
 
     def adjust_billed_amount(self, posting_date):
@@ -90,81 +87,72 @@ class MicrofinanceLoanInterest(AccountsController):
             self.make_gl_entries(
                 self.billed_amount - prev_billed,
                 posting_date=posting_date,
-                remarks='Adjustment to Interest for {}'.format(self.period),
+                remarks="Adjustment to Interest for {}".format(self.period),
             )
 
     def get_billed_amount(self):
-        outstanding_principal = get_outstanding_principal(
-            self.loan, self.end_date
-        )
+        outstanding_principal = get_outstanding_principal(self.loan, self.end_date)
         calculation_slab, rate_of_interest = frappe.get_value(
-            'Microfinance Loan',
-            self.loan,
-            ['calculation_slab', 'rate_of_interest'],
+            "Microfinance Loan", self.loan, ["calculation_slab", "rate_of_interest"]
         )
-        return calc_interest(
-            outstanding_principal, rate_of_interest, calculation_slab
-        )
+        return calc_interest(outstanding_principal, rate_of_interest, calculation_slab)
 
     def set_fine_amount(self, amount=None):
         if amount:
             self.fine_amount = amount
         else:
             rate_of_late_charges = frappe.get_value(
-                'Microfinance Loan', self.loan, 'rate_of_late_charges'
+                "Microfinance Loan", self.loan, "rate_of_late_charges"
             )
-            self.fine_amount = (self.billed_amount - flt(self.paid_amount)) \
-                * flt(rate_of_late_charges) / 100
+            self.fine_amount = (
+                (self.billed_amount - flt(self.paid_amount))
+                * flt(rate_of_late_charges)
+                / 100
+            )
         self.save()
         self.make_gl_entries(
             self.fine_amount,
             posting_date=add_months(self.end_date, 1),
-            remarks='Late charge for {}'.format(self.period),
+            remarks="Late charge for {}".format(self.period),
         )
 
     def on_cancel(self):
         delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
     def get_gl_dict(self, args):
-        gl_dict = frappe._dict({
-            'against_voucher_type': 'Microfinance Loan',
-            'against_voucher': self.loan,
-        })
+        gl_dict = frappe._dict(
+            {"against_voucher_type": "Microfinance Loan", "against_voucher": self.loan}
+        )
         gl_dict.update(args)
         return super(MicrofinanceLoanInterest, self).get_gl_dict(gl_dict)
 
-    def make_gl_entries(self, amount, posting_date=None, remarks=''):
-        self.company = frappe.get_value(
-            'Microfinance Loan', self.loan, 'company'
-        )
+    def make_gl_entries(self, amount, posting_date=None, remarks=""):
+        self.company = frappe.get_value("Microfinance Loan", self.loan, "company")
         if posting_date:
             self.posting_date = posting_date
         interest_income_account, loan_account = frappe.get_value(
-            'Microfinance Loan',
-            self.loan,
-            ['interest_income_account', 'loan_account']
+            "Microfinance Loan", self.loan, ["interest_income_account", "loan_account"]
         )
         cost_center = frappe.db.get_value(
-            'Microfinance Loan Settings', None, 'cost_center'
+            "Microfinance Loan Settings", None, "cost_center"
         )
         gl_entries = [
-            self.get_gl_dict({
-                'account': loan_account,
-                'debit': amount,
-            }),
-            self.get_gl_dict({
-                'account': interest_income_account,
-                'credit': amount,
-                'cost_center': cost_center,
-                'remarks': remarks,
-            }),
+            self.get_gl_dict({"account": loan_account, "debit": amount}),
+            self.get_gl_dict(
+                {
+                    "account": interest_income_account,
+                    "credit": amount,
+                    "cost_center": cost_center,
+                    "remarks": remarks,
+                }
+            ),
         ]
         make_gl_entries(gl_entries, merge_entries=False)
 
     def get_status(self):
         if not self.paid_amount:
-            return 'Billed'
+            return "Billed"
         if self.paid_amount < self.billed_amount:
-            return 'Pending'
+            return "Pending"
         if self.paid_amount >= self.billed_amount:
-            return 'Clear'
+            return "Clear"
