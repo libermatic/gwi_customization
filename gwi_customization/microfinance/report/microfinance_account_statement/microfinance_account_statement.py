@@ -10,20 +10,17 @@ from gwi_customization.microfinance.api.loan import get_outstanding_principal
 
 
 def _accum_reducer(acc, row):
-    return acc + [
-        row[:-1] + (acc[-1][5] + row[4],) + row[-1:]
-    ]
+    return acc + [row[:-1] + (acc[-1][5] + row[4],) + row[-1:]]
 
 
 def _col_sum(idx):
     def fn(rows):
         return reduce(lambda a, x: a + x[idx], rows, 0)
+
     return fn
 
 
-_stringify_accounts = compose(
-    join(', '), partial(map, lambda x: "'{}'".format(x))
-)
+_stringify_accounts = compose(join(", "), partial(map, lambda x: "'{}'".format(x)))
 
 
 def execute(filters={}):
@@ -38,20 +35,18 @@ def execute(filters={}):
     ]
 
     company, loan_account = frappe.get_value(
-        'Microfinance Loan', filters.get('loan'), ['company', 'loan_account']
+        "Microfinance Loan", filters.get("loan"), ["company", "loan_account"]
     )
     accounts_to_exclude = [
         loan_account,
-        'Temporary Opening - {}'.format(
-            frappe.db.get_value('Company', company, 'abbr')
-        )
+        "Temporary Opening - {}".format(
+            frappe.db.get_value("Company", company, "abbr")
+        ),
     ]
     conds = [
         "against_voucher_type = 'Microfinance Loan'",
-        "against_voucher = '{}'".format(filters.get('loan')),
-        "account NOT IN ({})".format(
-            _stringify_accounts(accounts_to_exclude)
-        ),
+        "against_voucher = '{}'".format(filters.get("loan")),
+        "account NOT IN ({})".format(_stringify_accounts(accounts_to_exclude)),
     ]
     opening_entries = frappe.db.sql(
         """
@@ -62,8 +57,7 @@ def execute(filters={}):
             FROM `tabGL Entry`
             WHERE {conds} AND posting_date <'{from_date}'
         """.format(
-            conds=join(" AND ")(conds),
-            from_date=filters.get('from_date'),
+            conds=join(" AND ")(conds), from_date=filters.get("from_date")
         ),
         as_dict=True,
     )[0]
@@ -83,14 +77,14 @@ def execute(filters={}):
             ORDER BY posting_date ASC, name ASC
         """.format(
             conds=join(" AND ")(conds),
-            from_date=filters.get('from_date'),
-            to_date=filters.get('to_date'),
+            from_date=filters.get("from_date"),
+            to_date=filters.get("to_date"),
         )
     )
 
-    opening_credit = opening_entries.get('credit') or 0
-    opening_debit = opening_entries.get('debit') or 0
-    opening_amount = opening_entries.get('amount') or 0
+    opening_credit = opening_entries.get("credit") or 0
+    opening_debit = opening_entries.get("debit") or 0
+    opening_amount = opening_entries.get("amount") or 0
     total_credit = _col_sum(2)(results)
     total_debit = _col_sum(3)(results)
     total_amount = _col_sum(4)(results)
@@ -103,23 +97,15 @@ def execute(filters={}):
         opening_amount,
         None,
     )
-    total = (
-        None,
-        _("Total"),
-        total_credit,
-        total_debit,
-        total_amount,
-        None,
-        None
-    )
+    total = (None, _("Total"), total_credit, total_debit, total_amount, None, None)
     closing = (
         None,
         _("Closing"),
         opening_credit + total_credit,
         opening_debit + total_debit,
         opening_amount + total_amount,
-        get_outstanding_principal(filters.get('loan'), filters.get('to_date')),
-        None
+        get_outstanding_principal(filters.get("loan"), filters.get("to_date")),
+        None,
     )
     data = reduce(_accum_reducer, results, [opening]) + [total, closing]
 

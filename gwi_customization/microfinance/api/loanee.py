@@ -15,7 +15,9 @@ def get_service_details(loanee=None, customer=None):
                 FROM `tabMicrofinance Loanee`
                 WHERE customer = '{customer}'
                 LIMIT 1
-            """.format(customer=customer),
+            """.format(
+                customer=customer
+            ),
             as_dict=True,
         )
         try:

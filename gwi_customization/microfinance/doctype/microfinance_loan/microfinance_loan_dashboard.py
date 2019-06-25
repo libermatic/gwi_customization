@@ -7,15 +7,12 @@ from frappe import _
 
 def get_data():
     return {
-        'fieldname': 'loan',
-        'transactions': [
+        "fieldname": "loan",
+        "transactions": [
             {
-                'label': _('Payments'),
-                'items': ['Microfinance Disbursement', 'Microfinance Recovery']
+                "label": _("Payments"),
+                "items": ["Microfinance Disbursement", "Microfinance Recovery"],
             },
-            {
-                'label': _('Transactions'),
-                'items': ['Microfinance Write Off']
-            },
-        ]
+            {"label": _("Transactions"), "items": ["Microfinance Write Off"]},
+        ],
     }

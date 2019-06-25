@@ -17,42 +17,34 @@ def _make_row(row):
     undisbursed = get_undisbursed_principal(loan)
     outstanding = get_outstanding_principal(loan)
     recovered = get_recovered_principal(loan)
-    return row + (
-        sanctioned - undisbursed,
-        recovered,
-        outstanding,
-    )
+    return row + (sanctioned - undisbursed, recovered, outstanding)
 
 
 def execute(filters={}):
     columns = [
-            _("Posting Date") + ":Date:90",
-            _("Loan ID") + ":Link/Microfinance Loan:90",
-            _("Customer") + ":Link/Customer:120",
-            _("Sanctioned Amount") + ":Currency/currency:90",
-            _("Disbursed Amount") + ":Currency/currency:90",
-            _("Recovered Amount") + ":Currency/currency:90",
-            _("Outstanding Amount") + ":Currency/currency:90",
-        ]
-
-    conds = [
-        "docstatus = 1",
+        _("Posting Date") + ":Date:90",
+        _("Loan ID") + ":Link/Microfinance Loan:90",
+        _("Customer") + ":Link/Customer:120",
+        _("Sanctioned Amount") + ":Currency/currency:90",
+        _("Disbursed Amount") + ":Currency/currency:90",
+        _("Recovered Amount") + ":Currency/currency:90",
+        _("Outstanding Amount") + ":Currency/currency:90",
     ]
-    if filters.get('display') == 'Existing Loans':
-        conds.append(
-            "recovery_status in ('Not Started', 'In Progress')"
-        )
-    if filters.get('loan_plan'):
-        conds.append(
-            "loan_plan = '{}'".format(filters.get('loan_plan'))
-        )
+
+    conds = ["docstatus = 1"]
+    if filters.get("display") == "Existing Loans":
+        conds.append("recovery_status in ('Not Started', 'In Progress')")
+    if filters.get("loan_plan"):
+        conds.append("loan_plan = '{}'".format(filters.get("loan_plan")))
     result = frappe.db.sql(
         """
             SELECT posting_date, name, customer, loan_principal
             FROM `tabMicrofinance Loan`
             WHERE {}
-        """.format(" AND ".join(conds))
+        """.format(
+            " AND ".join(conds)
+        )
     )
     data = map(_make_row, result)
 
-    return columns, data
+    return columns, list(data)

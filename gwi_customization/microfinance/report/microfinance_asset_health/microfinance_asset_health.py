@@ -21,6 +21,7 @@ def _set_filter(filters, fieldname):
                 )
             ]
         return conds
+
     return fn
 
 
@@ -37,20 +38,24 @@ def _display_filter(display):
         partial(add_months, today()),
         neg,
         cint,
-        partial(frappe.get_value, 'Microfinance Loan Settings', None),
-    )('npa_duration')
+        partial(frappe.get_value, "Microfinance Loan Settings", None),
+    )("npa_duration")
 
     def fn(row):
         loan_start_date = row[-1]
         last_recovery_date = row[3]
         recovery_status = row[2]
-        if display == 'NPA Only':
-            date_to_check = max(loan_start_date, last_recovery_date) \
-                if last_recovery_date else loan_start_date
-            return recovery_status != 'Repaid' and date_to_check < npa_date
-        if display == 'Existing Loans':
-            return recovery_status in ['Not Started', 'In Progress']
+        if display == "NPA Only":
+            date_to_check = (
+                max(loan_start_date, last_recovery_date)
+                if last_recovery_date
+                else loan_start_date
+            )
+            return recovery_status != "Repaid" and date_to_check < npa_date
+        if display == "Existing Loans":
+            return recovery_status in ["Not Started", "In Progress"]
         return True
+
     return fn
 
 
@@ -66,9 +71,9 @@ def execute(filters=None):
     ]
 
     conds = compose(
-        _set_filter(filters, 'name'),
-        _set_filter(filters, 'customer'),
-        _set_filter(filters, 'loan_plan'),
+        _set_filter(filters, "name"),
+        _set_filter(filters, "customer"),
+        _set_filter(filters, "loan_plan"),
     )(["loan.disbursement_status != 'Sanctioned'"])
 
     result = frappe.db.sql(
@@ -96,7 +101,8 @@ def execute(filters=None):
         )
     )
     data = compose(
+        list,
         partial(map, _result_to_data),
-        partial(filter, _display_filter(filters.get('display')))
+        partial(filter, _display_filter(filters.get("display"))),
     )(result)
     return columns, data
