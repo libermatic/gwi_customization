@@ -47,4 +47,4 @@ def execute(filters={}):
     )
     data = map(_make_row, result)
 
-    return columns, data
+    return columns, list(data)

@@ -13,6 +13,8 @@ from gwi_customization.microfinance.api.loan import (
     update_recovery_status,
     get_outstanding_principal,
 )
+from toolz import concatv
+
 from gwi_customization.microfinance.api.interest import (
     allocate_interests,
     make_name,
@@ -127,44 +129,50 @@ class MicrofinanceRecovery(AccountsController):
         make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
 
     def add_loan_gl_entries(self, gle=[]):
-        return gle + [
-            self.get_gl_dict(
-                {"account": self.loan_account, "credit": self.principal_amount}
-            ),
-            self.get_gl_dict(
-                {
-                    "account": self.payment_account,
-                    "debit": self.principal_amount,
-                    "against": self.customer,
-                    "remarks": "Capital received",
-                }
-            ),
-        ]
+        return concatv(
+            gle,
+            [
+                self.get_gl_dict(
+                    {"account": self.loan_account, "credit": self.principal_amount}
+                ),
+                self.get_gl_dict(
+                    {
+                        "account": self.payment_account,
+                        "debit": self.principal_amount,
+                        "against": self.customer,
+                        "remarks": "Capital received",
+                    }
+                ),
+            ],
+        )
 
     def add_interest_gl_entries(self, gle=[]):
-        return gle + [
-            self.get_gl_dict(
-                {"account": self.loan_account, "credit": self.total_interests}
-            ),
-            self.get_gl_dict(
-                {
-                    "account": self.payment_account,
-                    "debit": self.total_interests,
-                    "against": self.customer,
-                    "remarks": "Interest received for {}".format(
-                        _stringify_periods(self.periods)
-                    ),
-                }
-            ),
-        ]
+        return concatv(
+            gle,
+            [
+                self.get_gl_dict(
+                    {"account": self.loan_account, "credit": self.total_interests}
+                ),
+                self.get_gl_dict(
+                    {
+                        "account": self.payment_account,
+                        "debit": self.total_interests,
+                        "against": self.customer,
+                        "remarks": "Interest received for {}".format(
+                            _stringify_periods(self.periods)
+                        ),
+                    }
+                ),
+            ],
+        )
 
     def add_charges_gl_entries(self, gle=[]):
         cost_center = frappe.db.get_value(
             "Microfinance Loan Settings", None, "cost_center"
         )
-        return (
-            gle
-            + map(
+        return concatv(
+            gle,
+            map(
                 lambda row: self.get_gl_dict(
                     {
                         "account": row.charge_account,
@@ -174,8 +182,8 @@ class MicrofinanceRecovery(AccountsController):
                     }
                 ),
                 self.charges,
-            )
-            + [
+            ),
+            [
                 self.get_gl_dict(
                     {
                         "account": self.payment_account,
@@ -184,7 +192,7 @@ class MicrofinanceRecovery(AccountsController):
                         "remarks": "Payment received against service charges",
                     }
                 )
-            ]
+            ],
         )
 
     def make_interests(self, cancel=0):

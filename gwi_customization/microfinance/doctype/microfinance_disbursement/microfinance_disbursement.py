@@ -9,6 +9,8 @@ from frappe.utils import flt, getdate, fmt_money
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from toolz import concatv
+
 from gwi_customization.microfinance.api.loan import get_undisbursed_principal
 from gwi_customization.microfinance.api.interest import update_advance_interests
 
@@ -86,34 +88,39 @@ class MicrofinanceDisbursement(AccountsController):
         temp_account = "Temporary Opening - {}".format(
             frappe.db.get_value("Company", self.company, "abbr")
         )
-        return gle + [
-            self.get_gl_dict(
-                {
-                    "account": self.loan_account,
-                    "debit": self.recovered_amount,
-                    "is_opening": "Yes",
-                }
-            ),
-            self.get_gl_dict(
-                {"account": temp_account, "credit": self.recovered_amount}
-            ),
-            self.get_gl_dict(
-                {
-                    "account": self.loan_account,
-                    "credit": self.recovered_amount,
-                    "is_opening": "Yes",
-                }
-            ),
-            self.get_gl_dict({"account": temp_account, "debit": self.recovered_amount}),
-        ]
+        return concatv(
+            gle,
+            [
+                self.get_gl_dict(
+                    {
+                        "account": self.loan_account,
+                        "debit": self.recovered_amount,
+                        "is_opening": "Yes",
+                    }
+                ),
+                self.get_gl_dict(
+                    {"account": temp_account, "credit": self.recovered_amount}
+                ),
+                self.get_gl_dict(
+                    {
+                        "account": self.loan_account,
+                        "credit": self.recovered_amount,
+                        "is_opening": "Yes",
+                    }
+                ),
+                self.get_gl_dict(
+                    {"account": temp_account, "debit": self.recovered_amount}
+                ),
+            ],
+        )
 
     def add_charges_gl_entries(self, gle=[]):
         cost_center = frappe.db.get_value(
             "Microfinance Loan Settings", None, "cost_center"
         )
-        return (
-            gle
-            + map(
+        return concatv(
+            gle,
+            map(
                 lambda row: self.get_gl_dict(
                     {
                         "account": row.charge_account,
@@ -123,8 +130,8 @@ class MicrofinanceDisbursement(AccountsController):
                     }
                 ),
                 self.charges,
-            )
-            + [
+            ),
+            [
                 self.get_gl_dict(
                     {
                         "account": self.payment_account,
@@ -133,7 +140,7 @@ class MicrofinanceDisbursement(AccountsController):
                         "remarks": "Payment received against service charges",
                     }
                 )
-            ]
+            ],
         )
 
     def update_loan_status(self):

@@ -101,6 +101,7 @@ def execute(filters=None):
         )
     )
     data = compose(
+        list,
         partial(map, _result_to_data),
         partial(filter, _display_filter(filters.get("display"))),
     )(result)
