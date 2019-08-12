@@ -1,10 +1,10 @@
 {
   "name": "gwi_customization",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Customizations for GWI",
   "main": "gwi_customization/public/js/index.js",
   "dependencies": {
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.15"
   },
   "devDependencies": {},
   "scripts": {
