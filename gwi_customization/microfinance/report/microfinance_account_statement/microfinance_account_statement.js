@@ -26,19 +26,15 @@ frappe.query_reports['Microfinance Account Statement'] = {
       get_query: function() {
         return { doctype: 'Microfinance Loan', filters: { docstatus: 1 } };
       },
-      on_change: async function() {
-        const loan = frappe.query_report_filters_by_name['loan'].get_value();
-        const { message = {} } = await frappe.db.get_value(
-          'Microfinance Loan',
-          loan,
-          ['customer_name', 'posting_date']
-        );
-        frappe.query_report_filters_by_name['customer_name'].set_value(
-          message['customer_name']
-        );
-        frappe.query_report_filters_by_name['loan_start_date'].set_value(
-          message['posting_date']
-        );
+      on_change: async function(q) {
+        const loan = q.get_filter_value('loan');
+        const {
+          message: { customer_name, posting_date: loan_start_date } = {},
+        } = await frappe.db.get_value('Microfinance Loan', loan, [
+          'customer_name',
+          'posting_date',
+        ]);
+        q.set_filter_value({ customer_name, loan_start_date });
       },
       reqd: 1,
     },
