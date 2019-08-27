@@ -7,3 +7,4 @@ gwi_customization/docs/current
 gwi_customization/**/__pycache__
 .ropeproject
 node_modules
+yarn.lock
