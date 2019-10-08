@@ -305,8 +305,18 @@ def remove(name):
     interest = frappe.get_doc("Microfinance Loan Interest", name)
     if _has_next_interest(interest):
         return frappe.throw("Interest for next interval already exists")
+    recovery = frappe.db.get_value(
+        "Microfinance Recovery Period", {"ref_interest": name}, "parent"
+    )
+    # force if recovery is cancelled
+    force = (
+        1
+        if recovery
+        and frappe.db.get_value("Microfinance Recovery", recovery, "docstatus") == 2
+        else 0
+    )
     interest.cancel()
-    frappe.delete_doc("Microfinance Loan Interest", name)
+    frappe.delete_doc("Microfinance Loan Interest", name, force)
     return interest
 
 
