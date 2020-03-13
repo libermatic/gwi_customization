@@ -57,6 +57,11 @@ class MicrofinanceLoan(Document):
         self.validate_allowable_amount()
 
     def validate_allowable_amount(self, is_update=False):
+        loan_type = self.loan_type or frappe.db.get_value(
+            "Loan Plan", self.loan_plan, "loan_type"
+        )
+        if loan_type == "EMI":
+            return
         effective_date = frappe.get_value("Loan Plan", self.loan_plan, "effective_from")
         if effective_date and getdate(effective_date) > getdate(self.posting_date):
             return None
@@ -113,17 +118,17 @@ class MicrofinanceLoan(Document):
 
     def before_save(self):
         # set Loan Plan values
-        rate_of_interest, rate_of_late_charges, calculation_slab = frappe.get_value(
-            "Microfinance Loan Plan",
-            self.loan_plan,
-            ["rate_of_interest", "rate_of_late_charges", "calculation_slab"],
-        )
+        loan_plan = frappe.get_doc("Microfinance Loan Plan", self.loan_plan,)
+        if not self.loan_type:
+            self.loan_type = loan_plan.loan_type
         if not self.rate_of_interest:
-            self.rate_of_interest = rate_of_interest
+            self.rate_of_interest = loan_plan.rate_of_interest
         if not self.rate_of_late_charges:
-            self.rate_of_late_charges = rate_of_late_charges
+            self.rate_of_late_charges = loan_plan.rate_of_late_charges
         if not self.calculation_slab:
-            self.calculation_slab = calculation_slab
+            self.calculation_slab = loan_plan.calculation_slab
+        if not self.emi_duration:
+            self.emi_duration = loan_plan.emi_duration
 
         # set Loan Settings values
         interest_income_account, loan_account = frappe.get_value(

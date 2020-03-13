@@ -21,10 +21,16 @@
   "loan_principal",
   "recovery_amount",
   "column_break_15",
+  "loan_type",
   "rate_of_interest",
   "rate_of_late_charges",
   "calculation_slab",
+  "emi_duration",
   "billing_start_date",
+  "emi_section_section",
+  "monthly_interest",
+  "column_break_25",
+  "total_amount",
   "section_break_20",
   "loan_account",
   "column_break_22",
@@ -163,6 +169,7 @@
   },
   {
    "allow_on_submit": 1,
+   "depends_on": "eval:doc.loan_type == 'Standard'",
    "fetch_from": "loan_plan.calculation_slab",
    "fieldname": "calculation_slab",
    "fieldtype": "Currency",
@@ -209,11 +216,46 @@
    "fieldtype": "Link",
    "label": "Letter Head",
    "options": "Letter Head"
+  },
+  {
+   "fetch_from": "loan_plan.loan_type",
+   "fieldname": "loan_type",
+   "fieldtype": "Read Only",
+   "label": "Loan Type"
+  },
+  {
+   "depends_on": "eval:doc.loan_type === 'EMI'",
+   "fieldname": "emi_section_section",
+   "fieldtype": "Section Break",
+   "label": "EMI Section"
+  },
+  {
+   "fieldname": "monthly_interest",
+   "fieldtype": "Currency",
+   "label": "Monthly Interest"
+  },
+  {
+   "depends_on": "eval:doc.loan_type == 'EMI'",
+   "fetch_from": "loan_plan.emi_duration",
+   "fieldname": "emi_duration",
+   "fieldtype": "Int",
+   "label": "EMI Duration in Months",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_25",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-19 13:40:31.117504",
- "modified_by": "sun@x.com",
+ "modified": "2020-03-12 22:07:31.851928",
+ "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan",
  "name_case": "UPPER CASE",
