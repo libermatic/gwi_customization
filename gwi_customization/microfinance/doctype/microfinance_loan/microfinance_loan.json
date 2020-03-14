@@ -29,8 +29,9 @@
   "billing_start_date",
   "emi_section_section",
   "monthly_interest",
-  "column_break_25",
   "total_amount",
+  "column_break_25",
+  "billing_end_date",
   "section_break_20",
   "loan_account",
   "column_break_22",
@@ -252,10 +253,17 @@
    "fieldtype": "Currency",
    "label": "Total Amount",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "billing_end_date",
+   "fieldtype": "Date",
+   "label": "Billing End Date",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
- "modified": "2020-03-14 13:54:09.782689",
+ "modified": "2020-03-14 14:27:44.312108",
  "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan",

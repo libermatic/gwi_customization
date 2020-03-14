@@ -18,12 +18,28 @@ class MicrofinanceLoanInterest(AccountsController):
 
     def validate(self):
         self.validate_loan_status()
+        self.validate_last_interest()
 
     def validate_loan_status(self):
         if "NPA" == frappe.db.get_value(
             "Microfinance Loan", self.loan, "recovery_status"
         ):
             frappe.throw("Cannot create or update interest for NPA loans")
+
+    def validate_last_interest(self):
+        loan_type, end_date = frappe.db.get_value(
+            "Microfinance Loan", self.loan, ["loan_type", "billing_end_date"]
+        )
+        if (
+            loan_type == "EMI"
+            and end_date
+            and frappe.utils.getdate(self.end_date) > end_date
+        ):
+            frappe.throw(
+                "Cannot create interest for period after Loan End Date: {}".format(
+                    end_date
+                )
+            )
 
     def before_save(self):
         if not self.billed_amount:
