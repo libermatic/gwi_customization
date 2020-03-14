@@ -142,6 +142,8 @@ class MicrofinanceDisbursement(AccountsController):
     def update_loan_status(self):
         """Method to update disbursement_status of Loan"""
         loan = frappe.get_doc("Microfinance Loan", self.loan)
+        if not loan.billing_start_date and loan.loan_type == "EMI":
+            loan.billing_start_date = self.posting_date
         undisbursed_principal = get_undisbursed_principal(self.loan)
         current_status = loan.disbursement_status
         if loan.loan_principal > undisbursed_principal > 0:

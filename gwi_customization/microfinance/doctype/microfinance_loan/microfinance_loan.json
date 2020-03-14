@@ -177,6 +177,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "billing_start_date",
    "fieldtype": "Date",
    "label": "Billing Start Date",
@@ -254,7 +255,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-03-12 22:07:31.851928",
+ "modified": "2020-03-14 13:54:09.782689",
  "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan",
