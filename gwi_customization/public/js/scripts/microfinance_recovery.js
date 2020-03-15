@@ -39,19 +39,13 @@ export default {
   set_init_amounts: async function(frm) {
     const { loan, posting_date } = frm.doc;
     if (loan && posting_date) {
-      const [
-        { message: interest_amount = 0 },
-        { message: { recovery_amount = 0 } = {} },
-      ] = await Promise.all([
-        frappe.call({
-          method:
-            'gwi_customization.microfinance.api.interest.get_current_interest',
-          args: { loan, posting_date },
-        }),
-        frappe.db.get_value('Microfinance Loan', loan, 'recovery_amount'),
-      ]);
-      frm.set_value('total_interests', interest_amount);
-      frm.set_value('principal_amount', recovery_amount);
+      const { message } = await frappe.call({
+        method: 'gwi_customization.microfinance.api.interest.get_init_amounts',
+        args: { loan, posting_date },
+      });
+      Object.keys(message).forEach(field =>
+        frm.set_value(field, message[field])
+      );
     }
   },
   calculate_totals: function(frm) {

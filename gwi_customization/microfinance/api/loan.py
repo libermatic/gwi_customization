@@ -221,3 +221,15 @@ def set_npa(loan, npa_date, final_amount, remarks=None):
         write_off.insert()
         write_off.submit()
     return wo_amount
+
+
+def get_outstanding(loan, posting_date):
+    result = frappe.db.sql(
+        """
+            SELECT SUM(billed_amount + principal_amount + fine_amount - paid_amount)
+            FROM `tabMicrofinance Loan Interest`
+            WHERE loan = %(loan)s AND posting_date <= %(posting_date)s
+        """,
+        values={"loan": loan, "posting_date": posting_date},
+    )
+    return result[0][0] or 0

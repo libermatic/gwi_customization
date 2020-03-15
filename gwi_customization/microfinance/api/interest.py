@@ -6,7 +6,10 @@ from __future__ import unicode_literals
 import frappe
 from frappe.utils import flt, add_days, add_months, get_last_day, getdate, formatdate
 from functools import partial, reduce
-from gwi_customization.microfinance.api.loan import get_outstanding_principal
+from gwi_customization.microfinance.api.loan import (
+    get_outstanding_principal,
+    get_outstanding,
+)
 from gwi_customization.microfinance.utils import calc_interest
 from gwi_customization.microfinance.utils.fp import update, join, compose, pick
 
@@ -378,3 +381,18 @@ def update_advance_interests(loan, posting_date):
     for interest in adv_interests:
         doc = frappe.get_doc("Microfinance Loan Interest", interest)
         doc.adjust_billed_amount(posting_date)
+
+
+@frappe.whitelist()
+def get_init_amounts(loan, posting_date):
+    loan_type, recovery_amount = frappe.db.get_value(
+        "Microfinance Loan", loan, ["loan_type", "recovery_amount"]
+    )
+    if loan_type == "EMI":
+        return {"paid_amount": get_outstanding(loan, posting_date)}
+
+    current_interest = get_current_interest(loan, posting_date)
+    return {
+        "total_interests": current_interest,
+        "principal_amount": recovery_amount,
+    }
