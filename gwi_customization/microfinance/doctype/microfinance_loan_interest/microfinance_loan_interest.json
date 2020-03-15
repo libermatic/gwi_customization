@@ -11,8 +11,9 @@
   "start_date",
   "end_date",
   "billed_amount",
-  "paid_amount",
+  "principal_amount",
   "fine_amount",
+  "paid_amount",
   "amended_from"
  ],
  "fields": [
@@ -82,11 +83,17 @@
    "options": "Microfinance Loan Interest",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "principal_amount",
+   "fieldtype": "Currency",
+   "label": "Principal Amount",
+   "read_only": 1
   }
  ],
  "in_create": 1,
  "is_submittable": 1,
- "modified": "2020-03-14 15:46:30.112133",
+ "modified": "2020-03-15 17:27:53.272321",
  "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan Interest",

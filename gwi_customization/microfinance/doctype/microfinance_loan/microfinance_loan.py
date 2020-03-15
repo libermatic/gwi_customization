@@ -7,13 +7,16 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, get_last_day, getdate, flt, fmt_money
 from frappe.contacts.doctype.address.address import get_default_address
-from functools import reduce
+from functools import reduce, partial
+from toolz import compose
+
 from gwi_customization.microfinance.utils.fp import join, pick
 from gwi_customization.microfinance.api.loan import (
     get_chart_data,
     calculate_principal,
     get_outstanding_principal,
 )
+from gwi_customization.microfinance.api.interest import create as create_interest
 
 
 def _make_address_text(customer=None):
@@ -156,3 +159,38 @@ class MicrofinanceLoan(Document):
             or before.recovery_amount != self.recovery_amount
         ):
             self.validate_allowable_amount(is_update=True)
+
+    def on_update_after_submit(self):
+        if self.loan_type == "EMI":
+            before = self.get_doc_before_save()
+            if (
+                before.disbursement_status != "Fully Disbursed"
+                and self.disbursement_status == "Fully Disbursed"
+            ):
+                self.create_interests()
+
+    def create_interests(self):
+        get_start_date = compose(
+            lambda x: add_days(x, 1),
+            get_last_day,
+            partial(frappe.utils.add_months, self.billing_start_date),
+        )
+        for i in range(0, self.emi_duration):
+            start_date = self.billing_start_date if i == 0 else get_start_date(i)
+            end_date = get_last_day(start_date)
+            period = start_date.strftime("%b %Y")
+            frappe.get_doc(
+                {
+                    "doctype": "Microfinance Loan Interest",
+                    "loan": self.name,
+                    "posting_date": add_days(end_date, 1),
+                    "period": period,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "billed_amount": self.monthly_interest,
+                    "principal_amount": self.loan_principal / self.emi_duration,
+                }
+            ).insert(ignore_permissions=True)
+            self.billing_end_date = get_last_day(
+                frappe.utils.add_months(self.billing_start_date, self.emi_duration)
+            )

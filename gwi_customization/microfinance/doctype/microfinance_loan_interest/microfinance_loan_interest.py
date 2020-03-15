@@ -107,10 +107,19 @@ class MicrofinanceLoanInterest(AccountsController):
             )
 
     def get_billed_amount(self):
-        outstanding_principal = get_outstanding_principal(self.loan, self.end_date)
-        calculation_slab, rate_of_interest = frappe.get_value(
-            "Microfinance Loan", self.loan, ["calculation_slab", "rate_of_interest"]
+        (
+            loan_type,
+            calculation_slab,
+            rate_of_interest,
+            loan_principal,
+        ) = frappe.get_value(
+            "Microfinance Loan",
+            self.loan,
+            ["loan_type", "calculation_slab", "rate_of_interest", "loan_principal"],
         )
+        if loan_type == "EMI":
+            return calc_interest(loan_principal, rate_of_interest)
+        outstanding_principal = get_outstanding_principal(self.loan, self.end_date)
         return calc_interest(outstanding_principal, rate_of_interest, calculation_slab)
 
     def set_fine_amount(self, amount=None):
