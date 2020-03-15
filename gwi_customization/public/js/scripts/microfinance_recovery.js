@@ -18,6 +18,12 @@ export default {
   posting_date: function(frm) {
     frm.trigger('set_init_amounts');
   },
+  paid_amount: function(frm) {
+    const { paid_amount } = frm.doc;
+    if (paid_amount) {
+      frm.call('allocate_amount');
+    }
+  },
   principal_amount: function(frm) {
     frm.trigger('calculate_totals');
   },

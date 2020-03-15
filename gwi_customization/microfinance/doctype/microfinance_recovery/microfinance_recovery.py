@@ -9,11 +9,12 @@ from frappe.utils import flt, add_days, getdate
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from toolz import merge
+
 from gwi_customization.microfinance.api.loan import (
     update_recovery_status,
     get_outstanding_principal,
 )
-
 from gwi_customization.microfinance.api.interest import (
     allocate_interests,
     make_name,
@@ -53,29 +54,65 @@ class MicrofinanceRecovery(AccountsController):
         ):
             frappe.throw("Cannot recover interests for NPA loans")
 
-    def before_save(self):
-        self.total_amount = flt(self.total_interests) + flt(self.principal_amount)
-        self.total_charges = reduce(lambda a, x: a + x.charge_amount, self.charges, 0)
+    def allocate_amount(self):
+        self.total_amount = (
+            self.paid_amount
+            if self.loan_type == "EMI"
+            else flt(self.total_interests) + flt(self.principal_amount)
+        )
+        self.total_charges = reduce(
+            lambda a, x: a + x.charge_amount, self.get("charges", []), 0
+        )
         self.total_received = self.total_amount + self.total_charges
         account_dict = get_bank_cash_account(
             mode_of_payment=self.mode_of_payment or "Cash", company=self.company
         )
         self.payment_account = account_dict.get("account")
         self.periods = []
-        for period in allocate_interests(
-            self.loan,
-            self.posting_date,
-            amount_to_allocate=self.total_interests,
-            principal=self.principal_amount,
-        ):
-            self.append("periods", period)
-        expected_outstanding = self.principal_amount + compose(
-            sum,
-            partial(map, pick("outstanding_amount")),
-            partial(filter, lambda x: x.ref_interest is not None),
-        )(self.periods)
-        if expected_outstanding > get_outstanding_principal(self.loan):
-            frappe.throw("Cannot receive more than the current outstanding")
+        if self.loan_type == "EMI":
+            to_allocate = self.paid_amount
+            interests = frappe.get_all(
+                "Microfinance Loan Interest",
+                filters={"loan": self.loan, "status": ("!=", "Clear")},
+                fields=[
+                    "period as period_label",
+                    "start_date",
+                    "end_date",
+                    "billed_amount",
+                    "principal_amount",
+                    "fine_amount",
+                    "billed_amount + principal_amount + fine_amount - paid_amount as outstanding_amount",  # noqa
+                    "name as ref_interest",
+                ],
+                order_by="start_date",
+            )
+            for interest in interests:
+                allocated_amount = min(to_allocate, interest.get("outstanding_amount"))
+                if allocated_amount == 0:
+                    break
+                self.append(
+                    "periods", merge(interest, {"allocated_amount": allocated_amount})
+                )
+                to_allocate -= allocated_amount
+
+        else:
+            for period in allocate_interests(
+                self.loan,
+                self.posting_date,
+                amount_to_allocate=self.total_interests,
+                principal=self.principal_amount,
+            ):
+                self.append("periods", period)
+            expected_outstanding = self.principal_amount + compose(
+                sum,
+                partial(map, pick("outstanding_amount")),
+                partial(filter, lambda x: x.ref_interest is not None),
+            )(self.periods)
+            if expected_outstanding > get_outstanding_principal(self.loan):
+                frappe.throw("Cannot receive more than the current outstanding")
+
+    def before_save(self):
+        self.allocate_amount()
 
     def before_submit(self):
         sum_allocated = compose(sum, partial(map, pick("allocated_amount")))

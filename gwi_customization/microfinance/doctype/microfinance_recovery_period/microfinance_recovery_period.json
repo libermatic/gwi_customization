@@ -7,6 +7,8 @@
   "start_date",
   "end_date",
   "billed_amount",
+  "principal_amount",
+  "fine_amount",
   "column_break_3",
   "outstanding_amount",
   "allocated_amount",
@@ -37,7 +39,7 @@
    "fieldname": "billed_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Amount",
+   "label": "Interest Amount",
    "read_only": 1,
    "reqd": 1
   },
@@ -64,11 +66,23 @@
    "label": "Ref Interest",
    "options": "Microfinance Loan Interest",
    "read_only": 1
+  },
+  {
+   "fieldname": "principal_amount",
+   "fieldtype": "Currency",
+   "label": "Principal Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fine_amount",
+   "fieldtype": "Currency",
+   "label": "Fine Amount",
+   "read_only": 1
   }
  ],
  "istable": 1,
- "modified": "2019-08-19 13:39:45.647321",
- "modified_by": "sun@x.com",
+ "modified": "2020-03-15 18:55:06.059592",
+ "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Recovery Period",
  "owner": "Administrator",
