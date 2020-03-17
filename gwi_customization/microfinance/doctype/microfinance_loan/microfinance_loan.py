@@ -171,8 +171,7 @@ class MicrofinanceLoan(Document):
 
     def create_interests(self):
         get_start_date = compose(
-            lambda x: add_days(x, 1),
-            get_last_day,
+            frappe.utils.get_first_day,
             partial(frappe.utils.add_months, self.billing_start_date),
         )
         for i in range(0, self.emi_duration):
