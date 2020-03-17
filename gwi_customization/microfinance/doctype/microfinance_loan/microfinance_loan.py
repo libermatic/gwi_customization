@@ -16,7 +16,6 @@ from gwi_customization.microfinance.api.loan import (
     calculate_principal,
     get_outstanding_principal,
 )
-from gwi_customization.microfinance.api.interest import create as create_interest
 
 
 def _make_address_text(customer=None):
@@ -190,6 +189,6 @@ class MicrofinanceLoan(Document):
                     "principal_amount": self.loan_principal / self.emi_duration,
                 }
             ).insert(ignore_permissions=True)
-            self.billing_end_date = get_last_day(
-                frappe.utils.add_months(self.billing_start_date, self.emi_duration)
-            )
+        self.billing_end_date = get_last_day(
+            frappe.utils.add_months(self.billing_start_date, self.emi_duration)
+        )
