@@ -23,7 +23,7 @@ from gwi_customization.microfinance.api.interest import (
 from gwi_customization.microfinance.utils.fp import compose, update, join, pick
 
 
-def _create_or_update_interest(opts, update=0):
+def _create_or_update_interest(opts, update=0, submit=False):
     name = opts.get("ref_interest") or make_name(
         opts.get("loan"), opts.get("start_date")
     )
@@ -36,6 +36,8 @@ def _create_or_update_interest(opts, update=0):
         )
         doc.update({"paid_amount": paid_amount})
         doc.save()
+        if submit and doc.docstatus == 0:
+            doc.submit()
     else:
         doc = frappe.new_doc("Microfinance Loan Interest")
         doc.update(opts)
@@ -112,22 +114,27 @@ class MicrofinanceRecovery(AccountsController):
                 frappe.throw("Cannot receive more than the current outstanding")
 
     def before_save(self):
+        if self.loan_type == "EMI":
+            self.total_interests = sum([x.billed_amount for x in self.periods])
+            self.principal_amount = sum([x.principal_amount for x in self.periods])
         self.allocate_amount()
 
     def before_submit(self):
-        sum_allocated = compose(sum, partial(map, pick("allocated_amount")))
-        # validation for quirk when total_interests field is cleared and
-        # Submit button is still being rendered instead of being changed to
-        # Save
-        if self.total_interests != sum_allocated(self.periods):
-            frappe.throw(
-                "Interests and total allocated do not match. "
-                "Please refresh the page or update the interest"
-            )
+        if self.loan_type != "EMI":
+            sum_allocated = compose(sum, partial(map, pick("allocated_amount")))
+            # validation for quirk when total_interests field is cleared and
+            # Submit button is still being rendered instead of being changed to
+            # Save
+            if self.total_interests != sum_allocated(self.periods):
+                frappe.throw(
+                    "Interests and total allocated do not match. "
+                    "Please refresh the page or update the interest"
+                )
 
     def on_submit(self):
         self.make_principal_and_charges_gl_entries()
-        update_advance_interests(self.loan, self.posting_date)
+        if self.loan_type != "EMI":
+            update_advance_interests(self.loan, self.posting_date)
         interest_names = self.make_interests()
         for idx, item in enumerate(self.periods):
             if not item.ref_interest:
@@ -236,7 +243,14 @@ class MicrofinanceRecovery(AccountsController):
         )
         return compose(
             list,
-            partial(map, partial(_create_or_update_interest, update=cancel)),
+            partial(
+                map,
+                partial(
+                    _create_or_update_interest,
+                    update=cancel,
+                    submit=self.loan_type == "EMI",
+                ),
+            ),
             partial(
                 map,
                 compose(
