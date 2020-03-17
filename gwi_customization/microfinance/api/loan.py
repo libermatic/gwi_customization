@@ -84,9 +84,38 @@ def get_outstanding_principal(loan, posting_date=None):
     return outstanding
 
 
+def get_recovered(loan):
+    loan_type = frappe.db.get_value("Microfinance Loan", loan, "loan_type")
+    if loan_type != "EMI":
+        return get_recovered_principal(loan)
+    result = frappe.db.sql(
+        """
+            SELECT SUM(paid_amount) FROM `tabMicrofinance Loan Interest`
+            WHERE docstatus < 2 AND loan = %(loan)s
+        """,
+        values={"loan": loan},
+    )
+    return result[0][0] or 0
+
+
+def get_unrecovered(loan):
+    loan_type = frappe.db.get_value("Microfinance Loan", loan, "loan_type")
+    if loan_type != "EMI":
+        return get_outstanding_principal(loan)
+    result = frappe.db.sql(
+        """
+            SELECT SUM(billed_amount + principal_amount + fine_amount - paid_amount)
+            FROM `tabMicrofinance Loan Interest`
+            WHERE docstatus < 2 AND loan = %(loan)s
+        """,
+        values={"loan": loan},
+    )
+    return result[0][0] or 0
+
+
 def get_chart_data(loan_name):
-    recovered = get_recovered_principal(loan_name)
-    outstanding = get_outstanding_principal(loan_name)
+    recovered = get_recovered(loan_name)
+    outstanding = get_unrecovered(loan_name)
     undisbursed = get_undisbursed_principal(loan_name)
 
     write_off_account = frappe.get_value(
