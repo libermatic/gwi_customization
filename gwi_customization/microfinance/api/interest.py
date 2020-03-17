@@ -192,7 +192,7 @@ def list(loan, from_date, to_date):
 
     conds = [
         "loan = '{}'".format(loan),
-        "docstatus = 1",
+        "docstatus < 2",
         "start_date BETWEEN '{}' AND '{}'".format(from_date, to_date),
     ]
     existing = frappe.db.sql(
