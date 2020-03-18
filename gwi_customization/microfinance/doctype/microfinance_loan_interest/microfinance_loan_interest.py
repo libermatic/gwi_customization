@@ -7,7 +7,10 @@ import frappe
 from frappe.utils import add_months, flt
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries, delete_gl_entries
-from gwi_customization.microfinance.api.loan import get_outstanding_principal
+from gwi_customization.microfinance.api.loan import (
+    get_outstanding_principal,
+    get_outstanding,
+)
 from gwi_customization.microfinance.api.interest import make_name
 from gwi_customization.microfinance.utils import calc_interest
 
@@ -126,14 +129,18 @@ class MicrofinanceLoanInterest(AccountsController):
         if amount:
             self.fine_amount = amount
         else:
-            rate_of_late_charges = frappe.get_value(
-                "Microfinance Loan", self.loan, "rate_of_late_charges"
+            rate_of_late_charges, loan_type = frappe.get_value(
+                "Microfinance Loan", self.loan, ["rate_of_late_charges", "loan_type"]
             )
-            self.fine_amount = (
-                (self.billed_amount - flt(self.paid_amount))
-                * flt(rate_of_late_charges)
-                / 100
-            )
+            if loan_type == "EMI":
+                outstanding = get_outstanding(self.loan, self.posting_date)
+                self.fine_amount = outstanding * flt(rate_of_late_charges) / 100
+            else:
+                self.fine_amount = (
+                    (self.billed_amount - flt(self.paid_amount))
+                    * flt(rate_of_late_charges)
+                    / 100
+                )
         self.save()
         self.make_gl_entries(
             self.fine_amount,
