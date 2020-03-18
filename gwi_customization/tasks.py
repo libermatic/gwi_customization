@@ -5,6 +5,8 @@ import frappe
 import operator
 from functools import partial
 from frappe.utils import today, getdate, get_first_day, get_last_day, add_months
+from toolz import pluck
+
 from gwi_customization.microfinance.api.interest import make_name
 from gwi_customization.microfinance.utils.fp import pick, compose
 
@@ -99,7 +101,18 @@ def generate_late_fines(posting_date):
         _set_fine(interest)
 
 
+def _submit_draft_interests(posting_date):
+    interests = frappe.get_all(
+        "Microfinance Loan Interest",
+        filters={"posting_date": posting_date, "dcostatus": 0},
+    )
+    for name in pluck("name", interests):
+        doc = frappe.get_doc("Microfinance Loan Interest", name)
+        doc.submit()
+
+
 def monthly():
     posting_date = today()
     generate_late_fines(posting_date)
+    _submit_draft_interests(posting_date)
     generate_interest(posting_date)
