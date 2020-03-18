@@ -60,9 +60,8 @@ def generate_interest(posting_date):
         partial(map, pick("name")),
         _get_active_loans_after,
     )
-    return map(
-        partial(_create_interest_on, posting_date=posting_date), get_loans(posting_date)
-    )
+    for loan in get_loans(posting_date):
+        _create_interest_on(loan, posting_date)
 
 
 def _get_interests(end_date):
@@ -96,7 +95,8 @@ def generate_late_fines(posting_date):
         partial(add_months, months=-2),
         get_last_day,
     )
-    return map(_set_fine, get_interests(posting_date))
+    for interest in get_interests(posting_date):
+        _set_fine(interest)
 
 
 def monthly():
