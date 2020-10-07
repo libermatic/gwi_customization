@@ -159,6 +159,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
         frappe.db.get_value('Microfinance Loan', values['loan'], [
           'customer_name',
           'loan_plan',
+          'loan_type',
         ]),
       ]);
       result_html.removeClass('hidden').html(
@@ -172,7 +173,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
       );
       data.forEach(({ name, status, fine_wrote_off }) => {
         const btn = result_html.find(`button[name='${name}']`);
-        if (status === 'Clear' || fine_wrote_off) {
+        if (status === 'Clear' || fine_wrote_off || loan.loan_type === 'EMI') {
           btn.addClass('disabled').text('None');
         }
       });
