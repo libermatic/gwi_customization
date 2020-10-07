@@ -1,4 +1,4 @@
-frappe.pages['interest_tool'].on_page_load = function(wrapper) {
+frappe.pages['interest_tool'].on_page_load = function (wrapper) {
   const page = frappe.ui.make_app_page({
     parent: wrapper,
     title: 'Interests and Charges',
@@ -70,7 +70,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
     const dialog_actions_html = $(
       frappe.render_template('interest_tool_dialog_actions')
     );
-    actions_by_status[status].forEach(action => {
+    actions_by_status[status].forEach((action) => {
       dialog_actions_html
         .find(`tr[data-name="${action}"]`)
         .removeClass('text-muted')
@@ -82,7 +82,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   }
 
   function make_action(action) {
-    return async function() {
+    return async function () {
       try {
         await action();
         get_interests();
@@ -92,7 +92,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
     };
   }
   function handle_action(fieldname) {
-    return async function() {
+    return async function () {
       return await frappe.call({
         method: `gwi_customization.microfinance.api.interest.${fieldname}`,
         args: { name: dialog.get_value('name') },
@@ -120,7 +120,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   }
 
   const requests = {
-    create: async function() {
+    create: async function () {
       const loan = fg.get_value('loan');
       const { period, start_date } = dialog.get_values();
       const billed_amount = await prompt_promisified();
@@ -129,7 +129,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
         args: { loan, period, start_date, billed_amount },
       });
     },
-    update: async function() {
+    update: async function () {
       const name = dialog.get_value('name');
       const billed_amount = await prompt_promisified(
         dialog.get_value('billed_amount')
@@ -165,7 +165,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
       result_html.removeClass('hidden').html(
         frappe.render_template('interest_list', {
           loan,
-          data: data.map(x => ({
+          data: data.map((x) => ({
             indicator: colors_by_status[x.status],
             ...x,
           })),
@@ -177,7 +177,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
           btn.addClass('disabled').text('None');
         }
       });
-      result_html.find('button').on('click', async function(e) {
+      result_html.find('button').on('click', async function (e) {
         const {
           name,
           period,
@@ -186,8 +186,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
           outstanding_amount,
           fine_wrote_off,
           status,
-        } =
-          data.find(({ name }) => name === e.target.name) || {};
+        } = data.find(({ name }) => name === e.target.name) || {};
         dialog.set_title(`Actions for Interest Entry ${period}`);
         let render_status = status;
         if (status === 'Fined') {
@@ -201,7 +200,7 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
         dialog.fields_dict['dialog_actions_html'].html(
           render_buttons(render_status)
         );
-        actions_by_status[render_status].forEach(action => {
+        actions_by_status[render_status].forEach((action) => {
           dialog.fields_dict['dialog_actions_html'].$wrapper
             .find(`tr[data-name="${action}"] button`)
             .click(make_action(requests[action]));
@@ -213,13 +212,13 @@ frappe.pages['interest_tool'].on_page_load = function(wrapper) {
   }
 
   page.set_primary_action('Get Entries', get_interests);
-  page.set_secondary_action('Clear', function() {
+  page.set_secondary_action('Clear', function () {
     fg.fields_dict['result_html'].$wrapper.empty().addClass('hidden');
     fg.set_values({ loan: null });
   });
 };
 
-frappe.pages['interest_tool'].refresh = function({ fg }) {
+frappe.pages['interest_tool'].refresh = function ({ fg }) {
   if (frappe.route_options && frappe.route_options['loan']) {
     fg.set_value('loan', frappe.route_options['loan']);
     fg.fields_dict['result_html'].$wrapper.empty().addClass('hidden');
