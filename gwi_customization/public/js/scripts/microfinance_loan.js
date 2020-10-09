@@ -23,18 +23,18 @@ function calculate_total_amount(frm) {
 }
 
 export default {
-  refresh: async function(frm) {
+  refresh: async function (frm) {
     frm.trigger('clear_chart');
     if (frm.doc.docstatus === 1 && frm.doc.__onload['chart_data']) {
       frm.trigger('render_chart');
     }
-    frm.fields_dict['loan_account'].get_query = doc => ({
+    frm.fields_dict['loan_account'].get_query = (doc) => ({
       filters: {
         root_type: 'Asset',
         is_group: false,
       },
     });
-    frm.fields_dict['interest_income_account'].get_query = doc => ({
+    frm.fields_dict['interest_income_account'].get_query = (doc) => ({
       filters: {
         root_type: 'Income',
         is_group: false,
@@ -43,11 +43,12 @@ export default {
     if (frm.doc.__islocal) {
       frm.set_df_property('loan_account', 'reqd', 1);
       frm.set_df_property('interest_income_account', 'reqd', 1);
-      const { message: settings } = await frappe.db.get_value(
-        'Microfinance Loan Settings',
-        null,
-        ['loan_account', 'interest_income_account']
-      );
+      const {
+        message: settings,
+      } = await frappe.db.get_value('Microfinance Loan Settings', null, [
+        'loan_account',
+        'interest_income_account',
+      ]);
       if (settings) {
         const { loan_account, interest_income_account } = settings;
         frm.set_value('loan_account', loan_account);
@@ -57,12 +58,12 @@ export default {
     if (frm.doc.docstatus > 0) {
       frm.set_df_property('loan_principal', 'read_only', 1);
       frm.set_df_property('recovery_amount', 'read_only', 1);
-      frm.page.add_menu_item(__('Account Statement'), function() {
+      frm.page.add_menu_item(__('Account Statement'), function () {
         frappe.set_route('query-report', 'Microfinance Account Statement', {
           loan: frm.doc['name'],
         });
       });
-      frm.page.add_menu_item(__('Update Principal / Recovery'), function() {
+      frm.page.add_menu_item(__('Update Principal / Recovery'), function () {
         frappe.prompt(
           [
             {
@@ -78,7 +79,7 @@ export default {
               default: frm.doc['recovery_amount'],
             },
           ],
-          async function(values) {
+          async function (values) {
             await frappe.call({
               method: 'gwi_customization.microfinance.api.loan.update_amounts',
               args: { name: frm.doc['name'], ...values },
@@ -90,12 +91,12 @@ export default {
           'Submit'
         );
       });
-      frm.page.add_menu_item(__('Interest Tool'), function() {
+      frm.page.add_menu_item(__('Interest Tool'), function () {
         frappe.set_route('interest_tool', {
           loan: frm.doc['name'],
         });
       });
-      frm.page.add_menu_item(__('New Loan Query'), async function() {
+      frm.page.add_menu_item(__('New Loan Query'), async function () {
         const { message: service } = await frappe.call({
           method:
             'gwi_customization.microfinance.api.loanee.get_service_details',
@@ -131,7 +132,7 @@ export default {
             fieldtype: 'Small Text',
           },
         ],
-        primary_action: async function() {
+        primary_action: async function () {
           const values = npa_dialog.get_values();
           const { message: wo_amount } = await frappe.call({
             method: 'gwi_customization.microfinance.api.loan.set_npa',
@@ -147,12 +148,12 @@ export default {
           }
         },
       });
-      frm.page.add_menu_item(__('Set as NPA'), function() {
+      frm.page.add_menu_item(__('Set as NPA'), function () {
         npa_dialog.show();
       });
     }
   },
-  render_chart: function(frm) {
+  render_chart: function (frm) {
     const chart_area = frm.$wrapper.find('.form-graph').removeClass('hidden');
     const chart = new frappe.Chart(chart_area[0], {
       type: 'percentage',
@@ -160,13 +161,10 @@ export default {
       colors: ['green', 'orange', 'blue', 'grey'],
     });
   },
-  clear_chart: function(frm) {
-    frm.$wrapper
-      .find('.form-graph')
-      .empty()
-      .addClass('hidden');
+  clear_chart: function (frm) {
+    frm.$wrapper.find('.form-graph').empty().addClass('hidden');
   },
-  loan_principal: function(frm) {
+  loan_principal: function (frm) {
     calculate_recovery(frm);
     calculate_monthly_interest(frm);
   },

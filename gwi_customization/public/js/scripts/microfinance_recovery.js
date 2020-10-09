@@ -1,36 +1,36 @@
 export default {
-  refresh: function(frm) {
-    frm.fields_dict['loan'].get_query = doc => ({
+  refresh: function (frm) {
+    frm.fields_dict['loan'].get_query = (doc) => ({
       filters: { docstatus: 1 },
     });
     frappe.ui.form.on('Microfinance Other Charge', {
-      charge_amount: function(frm) {
+      charge_amount: function (frm) {
         frm.trigger('calculate_totals');
       },
-      charges_remove: function(frm) {
+      charges_remove: function (frm) {
         frm.trigger('calculate_totals');
       },
     });
   },
-  loan: function(frm) {
+  loan: function (frm) {
     frm.trigger('set_init_amounts');
   },
-  posting_date: function(frm) {
+  posting_date: function (frm) {
     frm.trigger('set_init_amounts');
   },
-  paid_amount: function(frm) {
+  paid_amount: function (frm) {
     const { paid_amount } = frm.doc;
     if (paid_amount) {
       frm.call('allocate_amount');
     }
   },
-  principal_amount: function(frm) {
+  principal_amount: function (frm) {
     frm.trigger('calculate_totals');
   },
-  total_interests: function(frm) {
+  total_interests: function (frm) {
     frm.trigger('calculate_totals');
   },
-  mode_of_payment: async function(frm) {
+  mode_of_payment: async function (frm) {
     const { mode_of_payment, company } = frm.doc;
     frm.toggle_reqd(['cheque_no', 'cheque_date'], mode_of_payment == 'Cheque');
     const { message } = await frappe.call({
@@ -42,19 +42,19 @@ export default {
       frm.set_value('payment_account', message.account);
     }
   },
-  set_init_amounts: async function(frm) {
+  set_init_amounts: async function (frm) {
     const { loan, posting_date } = frm.doc;
     if (loan && posting_date) {
       const { message } = await frappe.call({
         method: 'gwi_customization.microfinance.api.interest.get_init_amounts',
         args: { loan, posting_date },
       });
-      Object.keys(message).forEach(field =>
+      Object.keys(message).forEach((field) =>
         frm.set_value(field, message[field])
       );
     }
   },
-  calculate_totals: function(frm) {
+  calculate_totals: function (frm) {
     if (
       frm.fields_dict['total_interests'] &&
       frm.fields_dict['total_charges']

@@ -7,7 +7,7 @@ import AuditStatementSummary from '../vue/AuditStatementSummary.vue';
 function set_balance(frm, cdt, cdn) {
   const { idx = 0, principal = 0 } = frappe.get_doc(cdt, cdn);
   const { balance: prev_balance = 0 } =
-    (frm.doc.transactions || []).find(row => row.idx === idx - 1) || {};
+    (frm.doc.transactions || []).find((row) => row.idx === idx - 1) || {};
   frappe.model.set_value(cdt, cdn, 'balance', prev_balance - principal);
 }
 
@@ -22,7 +22,7 @@ function set_interest(frm, cdt, cdn) {
   const { interest_rate = 0, calculation_slab = 0 } = frm.doc;
   const { idx = 0 } = frappe.get_doc(cdt, cdn);
   const { balance: prev_balance = 0 } =
-    (frm.doc.transactions || []).find(row => row.idx === idx - 1) || {};
+    (frm.doc.transactions || []).find((row) => row.idx === idx - 1) || {};
   const slabbed_balance = get_slabbed_amount(prev_balance, calculation_slab);
   frappe.model.set_value(
     cdt,
@@ -49,7 +49,7 @@ function render_dashboard(frm) {
   const node = frm.dashboard.add_section('<div />').children()[0];
   new Vue({
     el: node,
-    render: h =>
+    render: (h) =>
       h(AuditStatementSummary, {
         props: { principals, interests, balance, formatter: format_currency },
       }),
@@ -66,7 +66,7 @@ const audit_statement_detail = {
 
 export default {
   audit_statement_detail,
-  refresh: function(frm) {
+  refresh: function (frm) {
     if (!frm.doc.__islocal) {
       render_dashboard(frm);
     }
