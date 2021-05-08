@@ -104,7 +104,7 @@ def generate_late_fines(posting_date):
 def _submit_draft_interests(posting_date):
     interests = frappe.get_all(
         "Microfinance Loan Interest",
-        filters={"posting_date": posting_date, "dcostatus": 0},
+        filters={"posting_date": posting_date, "docstatus": 0},
     )
     for name in pluck("name", interests):
         doc = frappe.get_doc("Microfinance Loan Interest", name)
