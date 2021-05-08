@@ -76,6 +76,7 @@ frappe.pages['interest_tool'].on_page_load = function (wrapper) {
         .removeClass('text-muted')
         .find('button')
         .removeClass('disabled')
+        .removeAttr('disabled')
         .addClass('btn-info');
     });
     return dialog_actions_html.prop('outerHTML');
@@ -174,7 +175,7 @@ frappe.pages['interest_tool'].on_page_load = function (wrapper) {
       data.forEach(({ name, status, fine_wrote_off }) => {
         const btn = result_html.find(`button[name='${name}']`);
         if (status === 'Clear' || fine_wrote_off || loan.loan_type === 'EMI') {
-          btn.addClass('disabled').text('None');
+          btn.addClass('disabled').attr('disabled', true).text('None');
         }
       });
       result_html.find('button').on('click', async function (e) {
