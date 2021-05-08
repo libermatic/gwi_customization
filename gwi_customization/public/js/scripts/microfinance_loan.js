@@ -149,15 +149,16 @@ export default {
     }
   },
   render_chart: function (frm) {
-    const chart_area = frm.$wrapper.find('.form-graph').removeClass('hidden');
-    const chart = new frappe.Chart(chart_area[0], {
+    frm.dashboard.chart_area.show();
+    const chart = new frappe.Chart('.form-graph', {
       type: 'percentage',
       data: frm.doc.__onload['chart_data'],
       colors: ['green', 'orange', 'blue', 'grey'],
     });
   },
   clear_chart: function (frm) {
-    frm.$wrapper.find('.form-graph').empty().addClass('hidden');
+    frm.dashboard.chart_area.wrapper.empty();
+    frm.dashboard.chart_area.hide();
   },
   loan_principal: function (frm) {
     calculate_recovery(frm);
