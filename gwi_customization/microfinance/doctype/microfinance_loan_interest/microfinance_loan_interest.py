@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.utils import add_months, flt
 from erpnext.controllers.accounts_controller import AccountsController
-from erpnext.accounts.general_ledger import make_gl_entries, delete_gl_entries
+from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
 from gwi_customization.microfinance.api.loan import (
     get_outstanding_principal,
     get_outstanding,
@@ -93,7 +93,14 @@ class MicrofinanceLoanInterest(AccountsController):
             )
         )[0][0]
         if cur_billed != self.billed_amount:
-            delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
+            frappe.db.sql(
+                """
+                    DELETE FROM `tabGL Entry`
+                    WHERE voucher_type={} AND voucher_no={}
+                """.format(
+                    self.doctype, self.name
+                )
+            )
             self.make_gl_entries(
                 self.billed_amount, remarks="Interest for {}".format(self.period)
             )
@@ -149,7 +156,7 @@ class MicrofinanceLoanInterest(AccountsController):
         )
 
     def on_cancel(self):
-        delete_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
+        make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
     def get_gl_dict(self, args):
         gl_dict = frappe._dict(
@@ -162,7 +169,7 @@ class MicrofinanceLoanInterest(AccountsController):
         self.company = frappe.get_value("Microfinance Loan", self.loan, "company")
         if posting_date:
             self.posting_date = posting_date
-        interest_income_account, loan_account = frappe.get_value(
+        interest_income_account, loan_account = frappe.db.get_value(
             "Microfinance Loan", self.loan, ["interest_income_account", "loan_account"]
         )
         cost_center = frappe.db.get_value(
