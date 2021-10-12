@@ -97,7 +97,7 @@ class MicrofinanceLoanInterest(AccountsController):
             frappe.db.sql(
                 """
                     DELETE FROM `tabGL Entry`
-                    WHERE voucher_type={} AND voucher_no={}
+                    WHERE voucher_type='{}' AND voucher_no='{}'
                 """.format(
                     self.doctype, self.name
                 )
