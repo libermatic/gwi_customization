@@ -145,6 +145,7 @@ class MicrofinanceRecovery(AccountsController):
         update_recovery_status(self.loan, self.posting_date)
 
     def on_cancel(self):
+        self.ignore_linked_doctypes = ('GL Entry',)
         self.make_period_gl_entries(cancel=1)
         self.make_interests(cancel=1)
         self.make_principal_and_charges_gl_entries(cancel=1)

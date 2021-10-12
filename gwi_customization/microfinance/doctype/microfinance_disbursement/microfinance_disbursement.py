@@ -39,6 +39,7 @@ class MicrofinanceDisbursement(AccountsController):
         self.update_loan_status()
 
     def on_cancel(self):
+        self.ignore_linked_doctypes = ('GL Entry',)
         self.make_gl_entries(cancel=1)
         self.update_loan_status()
 

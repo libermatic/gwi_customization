@@ -74,6 +74,7 @@ class MicrofinanceLoanInterest(AccountsController):
                 self.status = "Fined"
 
     def before_cancel(self):
+        self.ignore_linked_doctypes = ('GL Entry',)
         self.validate_loan_status()
 
     def update_billed_amount(self, amount):

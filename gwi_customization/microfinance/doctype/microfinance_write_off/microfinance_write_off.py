@@ -28,6 +28,7 @@ class MicrofinanceWriteOff(AccountsController):
         )
 
     def on_cancel(self):
+        self.ignore_linked_doctypes = ('GL Entry',)
         self.make_gl_entries(cancel=1)
         update_recovery_status(self.loan, self.posting_date)
 
