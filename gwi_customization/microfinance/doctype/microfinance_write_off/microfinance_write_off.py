@@ -13,6 +13,9 @@ from gwi_customization.microfinance.api.loan import (
 
 
 class MicrofinanceWriteOff(AccountsController):
+    def validate(self):
+        pass
+
     def on_save(self):
         self.current_outstanding = get_outstanding_principal(
             self.loan, self.posting_date
