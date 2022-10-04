@@ -16,10 +16,9 @@ app_license = "MIT"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/css/gwi_customization.css"
+# app_include_css = "/assets/css/gwi_customization.css"
 app_include_js = [
-    "/assets/js/gwi_customization.min.js",
-    "/assets/js/gwi_templates.min.js",
+    "gwi_customization.bundle.js"
 ]
 
 # include js, css files in header of web template
@@ -89,8 +88,7 @@ setup_wizard_complete = "gwi_customization.install.after_wizard_complete"
 
 doc_events = {
     "Customer": {
-        "on_update": "gwi_customization.microfinance.doctype.microfinance_loanee"
-        ".microfinance_loanee.on_customer_update"
+        "on_update": "gwi_customization.microfinance.doctype.microfinance_loanee.microfinance_loanee.on_customer_update"
     }
 }
 

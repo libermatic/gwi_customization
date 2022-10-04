@@ -4,8 +4,11 @@
 *.swp
 tags
 gwi_customization/docs/current
-gwi_customization/**/__pycache__
-.ropeproject
-node_modules
-yarn.lock
-.vscode
+
+__pycache__
+.env
+
+# Bench runtime
+node_modules/
+gwi_customization/public/node_modules
+gwi_customization/public/dist
