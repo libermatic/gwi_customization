@@ -2,7 +2,6 @@
 # Copyright (c) 2018, Libermatic and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals
 import frappe
 from frappe.query_builder import Order
 from frappe.utils import flt, add_days, add_months, get_last_day, getdate, formatdate

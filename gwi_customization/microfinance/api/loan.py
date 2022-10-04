@@ -2,7 +2,6 @@
 # Copyright (c) 2018, Libermatic and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals
 import frappe
 from frappe.query_builder.functions import Sum
 from frappe.utils import get_last_day, add_months, flt, rounded, cint

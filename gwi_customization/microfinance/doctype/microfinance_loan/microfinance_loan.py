@@ -2,7 +2,6 @@
 # Copyright (c) 2018, Libermatic and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, get_last_day, getdate, flt, fmt_money

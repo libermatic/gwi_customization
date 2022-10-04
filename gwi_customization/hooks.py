@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from . import __version__
 
 app_name = "gwi_customization"
@@ -17,9 +16,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/css/gwi_customization.css"
-app_include_js = [
-    "gwi_customization.bundle.js"
-]
+app_include_js = "gwi_customization.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/gwi_customization/css/gwi_customization.css"
