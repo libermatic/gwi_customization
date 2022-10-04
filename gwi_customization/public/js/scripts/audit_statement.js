@@ -1,8 +1,12 @@
 import Vue from 'vue/dist/vue.js';
-import last from 'lodash/last';
-import sumBy from 'lodash/sumBy';
+import * as R from 'ramda'
 
 import AuditStatementSummary from '../vue/AuditStatementSummary.vue';
+
+const sumBy = R.compose(
+  R.reduce((a, x) => a + (x ?? 0), 0),
+  R.pluck
+);
 
 function set_balance(frm, cdt, cdn) {
   const { idx = 0, principal = 0 } = frappe.get_doc(cdt, cdn);
@@ -43,7 +47,7 @@ function set_period(frm, cdt, cdn) {
 }
 
 function render_dashboard(frm) {
-  const { balance = 0 } = last(frm.doc.transactions) || {};
+  const { balance = 0 } = R.last(frm.doc.transactions) || {};
   const principals = sumBy(frm.doc.transactions, 'principal');
   const interests = sumBy(frm.doc.transactions, 'interest');
   const node = frm.dashboard.add_section('<div />').children()[0];
