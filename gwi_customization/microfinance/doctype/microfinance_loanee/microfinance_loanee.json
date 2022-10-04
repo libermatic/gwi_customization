@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "MFC.######",
  "creation": "2018-04-09 00:59:31.622984",
  "doctype": "DocType",
@@ -253,10 +254,12 @@
    "fieldtype": "Text"
   }
  ],
- "modified": "2019-08-19 13:39:59.521669",
- "modified_by": "sun@x.com",
+ "links": [],
+ "modified": "2022-10-04 19:04:17.944585",
+ "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loanee",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -294,6 +297,7 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "customer_name",
  "track_changes": 1
 }

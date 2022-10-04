@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "MFW.######",
  "creation": "2018-04-20 01:55:25.148828",
  "doctype": "DocType",
@@ -128,10 +129,12 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2019-08-19 13:40:35.951106",
- "modified_by": "sun@x.com",
+ "links": [],
+ "modified": "2022-10-04 19:04:52.767495",
+ "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Write Off",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -175,6 +178,7 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "customer",
  "track_changes": 1
 }

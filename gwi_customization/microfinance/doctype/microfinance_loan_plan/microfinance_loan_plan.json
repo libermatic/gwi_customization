@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "field:loan_plan",
  "creation": "2018-04-08 12:56:45.516496",
  "doctype": "DocType",
@@ -136,11 +137,13 @@
    "label": "EMI Duration in Months"
   }
  ],
- "modified": "2020-03-12 21:21:31.771365",
+ "links": [],
+ "modified": "2022-10-04 19:05:44.734520",
  "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan Plan",
  "name_case": "Title Case",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -178,6 +181,7 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "loan_plan",
  "track_changes": 1
 }

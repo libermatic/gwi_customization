@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "autoname": "field:loan_no",
  "creation": "2018-04-07 20:56:08.315334",
  "doctype": "DocType",
@@ -263,11 +264,29 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2020-03-14 14:27:44.312108",
+ "links": [
+  {
+   "group": "Payments",
+   "link_doctype": "Microfinance Disbursement",
+   "link_fieldname": "loan"
+  },
+  {
+   "group": "Payments",
+   "link_doctype": "Microfinance Recovery",
+   "link_fieldname": "loan"
+  },
+  {
+   "group": "Transactions",
+   "link_doctype": "Microfinance Write Off",
+   "link_fieldname": "loan"
+  }
+ ],
+ "modified": "2022-10-04 19:16:13.933576",
  "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Loan",
  "name_case": "UPPER CASE",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -314,6 +333,7 @@
  "search_fields": "customer",
  "sort_field": "posting_date",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "customer",
  "track_changes": 1
 }

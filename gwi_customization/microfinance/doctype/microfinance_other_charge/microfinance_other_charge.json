@@ -1,4 +1,5 @@
 {
+ "actions": [],
  "creation": "2018-04-08 22:41:33.073509",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -30,8 +31,9 @@
   }
  ],
  "istable": 1,
- "modified": "2019-08-19 13:40:41.020669",
- "modified_by": "sun@x.com",
+ "links": [],
+ "modified": "2022-10-04 19:05:51.507531",
+ "modified_by": "Administrator",
  "module": "Microfinance",
  "name": "Microfinance Other Charge",
  "owner": "Administrator",
@@ -39,5 +41,6 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
