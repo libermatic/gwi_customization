@@ -1,23 +1,23 @@
 {
- "content": null, 
- "creation": "2018-04-22 22:42:02.869529", 
- "docstatus": 0, 
- "doctype": "Page", 
- "idx": 0, 
- "modified": "2018-04-22 22:43:03.867518", 
- "modified_by": "Administrator", 
- "module": "Microfinance", 
- "name": "interest_tool", 
- "owner": "Administrator", 
- "page_name": "interest_tool", 
+ "content": null,
+ "creation": "2018-04-22 22:42:02.869529",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2022-10-04 19:06:48.715026",
+ "modified_by": "Administrator",
+ "module": "Microfinance",
+ "name": "interest_tool",
+ "owner": "Administrator",
+ "page_name": "interest_tool",
  "roles": [
   {
    "role": "Loan Manager"
   }
- ], 
- "script": null, 
- "standard": "Yes", 
- "style": null, 
- "system_page": 0, 
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
  "title": "Interests and Charges"
 }
