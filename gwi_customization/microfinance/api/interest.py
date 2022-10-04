@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.query_builder import Order
 from frappe.utils import flt, add_days, add_months, get_last_day, getdate, formatdate
 from functools import partial, reduce
 from gwi_customization.microfinance.api.loan import (
@@ -52,37 +53,46 @@ def _is_advance(per, posting_date):
 
 
 def get_unpaid(loan):
-    return frappe.db.sql(
-        """
-            SELECT
-                name, loan, posting_date,
-                period, start_date, end_date,
-                billed_amount, paid_amount
-            FROM `tabMicrofinance Loan Interest`
-            WHERE loan='{loan}' AND status NOT IN ('Clear', 'Fined')
-            ORDER BY start_date
-        """.format(
-            loan=loan
-        ),
-        as_dict=True,
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where(
+            (LoanInterest.loan == loan)
+            & (LoanInterest.status.notin(["Clear", "Fined"]))
+        )
+        .orderby(LoanInterest.start_date)
+        .select(
+            LoanInterest.name,
+            LoanInterest.loan,
+            LoanInterest.posting_date,
+            LoanInterest.period,
+            LoanInterest.start_date,
+            LoanInterest.end_date,
+            LoanInterest.billed_amount,
+            LoanInterest.paid_amount,
+        )
     )
+    return q.run(as_dict=1)
 
 
 def get_last(loan):
-    res = frappe.db.sql(
-        """
-            SELECT
-                loan, posting_date, period, start_date, end_date,
-                billed_amount, paid_amount
-            FROM `tabMicrofinance Loan Interest`
-            WHERE loan='{loan}' AND docstatus = 1
-            ORDER BY start_date DESC
-            LIMIT 1
-        """.format(
-            loan=loan
-        ),
-        as_dict=True,
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where((LoanInterest.loan == loan) & (LoanInterest.docstatus == 1))
+        .orderby(LoanInterest.start_date, order=Order.desc)
+        .select(
+            LoanInterest.loan,
+            LoanInterest.posting_date,
+            LoanInterest.period,
+            LoanInterest.start_date,
+            LoanInterest.end_date,
+            LoanInterest.billed_amount,
+            LoanInterest.paid_amount,
+        )
+        .limit(1)
     )
+    res = q.run(as_dict=1)
     return res[0] if res else None
 
 
@@ -190,23 +200,26 @@ def list(loan, from_date, to_date):
     if getdate(to_date) < getdate(from_date):
         return frappe.throw("To date cannot be less than From date")
 
-    conds = [
-        "loan = '{}'".format(loan),
-        "docstatus < 2",
-        "start_date BETWEEN '{}' AND '{}'".format(from_date, to_date),
-    ]
-    existing = frappe.db.sql(
-        """
-            SELECT
-                name, status,
-                period, posting_date, start_date,
-                billed_amount, paid_amount, fine_amount
-            FROM `tabMicrofinance Loan Interest` WHERE {conds}
-        """.format(
-            conds=join(" AND ")(conds)
-        ),
-        as_dict=True,
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where(
+            (LoanInterest.loan == loan)
+            & (LoanInterest.docstatus < 2)
+            & (LoanInterest.start_date[from_date:to_date])
+        )
+        .select(
+            LoanInterest.name,
+            LoanInterest.status,
+            LoanInterest.period,
+            LoanInterest.posting_date,
+            LoanInterest.start_date,
+            LoanInterest.billed_amount,
+            LoanInterest.paid_amount,
+            LoanInterest.fine_amount,
+        )
     )
+    existing = q.run(as_dict=1)
     existing_dict = dict((row.name, row) for row in existing)
 
     get_item = compose(existing_dict.get, partial(make_name, loan))

@@ -31,20 +31,17 @@ def execute(filters={}):
         _("Outstanding Amount") + ":Currency/currency:90",
     ]
 
-    conds = ["docstatus = 1"]
-    if filters.get("display") == "Existing Loans":
-        conds.append("recovery_status in ('Not Started', 'In Progress')")
-    if filters.get("loan_plan"):
-        conds.append("loan_plan = '{}'".format(filters.get("loan_plan")))
-    result = frappe.db.sql(
-        """
-            SELECT posting_date, name, customer, loan_principal
-            FROM `tabMicrofinance Loan`
-            WHERE {}
-        """.format(
-            " AND ".join(conds)
-        )
+    Loan = frappe.qb.DocType("Microfinance Loan")
+    q = (
+        frappe.qb.from_(Loan)
+        .select(Loan.posting_date, Loan.name, Loan.customer, Loan.loan_principal)
+        .where(Loan.docstatus == 1)
     )
+    if filters.get("display") == "Existing Loans":
+        q = q.where(Loan.recovery_status.isin(["Not Started", "In Progress"]))
+    if filters.get("loan_plan"):
+        q = q.where(Loan.loan_plan == filters.get("loan_plan"))
+    result = q.run()
     data = map(_make_row, result)
 
     return columns, list(data)

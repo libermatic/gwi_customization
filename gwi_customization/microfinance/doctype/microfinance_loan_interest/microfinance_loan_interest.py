@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.query_builder.functions import Sum
 from frappe.utils import add_months, flt
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
@@ -74,7 +75,7 @@ class MicrofinanceLoanInterest(AccountsController):
                 self.status = "Fined"
 
     def before_cancel(self):
-        self.ignore_linked_doctypes = ('GL Entry',)
+        self.ignore_linked_doctypes = ("GL Entry",)
         self.validate_loan_status()
 
     def update_billed_amount(self, amount):
@@ -84,24 +85,22 @@ class MicrofinanceLoanInterest(AccountsController):
         interest_income_account = frappe.get_value(
             "Microfinance Loan", self.loan, "interest_income_account"
         )
-        cur_billed = frappe.db.sql(
-            """
-                SELECT SUM(credit - debit)
-                FROM `tabGL Entry`
-                WHERE account = '{account}' AND voucher_no = '{voucher_no}'
-            """.format(
-                account=interest_income_account, voucher_no=self.name
+        GLEntry = frappe.qb.DocType("GL Entry")
+        q = (
+            frappe.qb.from_(GLEntry)
+            .select(Sum(GLEntry.credit - GLEntry.debit))
+            .where(
+                (GLEntry.account == interest_income_account)
+                & (GLEntry.voucher_no == self.name)
             )
-        )[0][0]
+        )
+        cur_billed = q.run()[0][0]
         if cur_billed != self.billed_amount:
-            frappe.db.sql(
-                """
-                    DELETE FROM `tabGL Entry`
-                    WHERE voucher_type='{}' AND voucher_no='{}'
-                """.format(
-                    self.doctype, self.name
-                )
-            )
+            for (name,) in frappe.get_all(
+                "GL Entry",
+                filters={"voucher_type": self.doctype, "voucher_no": self.name},
+            ):
+                frappe.delete_doc("GL Entry", name, ignore_permissions=True)
             self.make_gl_entries(
                 self.billed_amount, remarks="Interest for {}".format(self.period)
             )

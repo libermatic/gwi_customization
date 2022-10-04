@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.query_builder.functions import Sum
 from functools import reduce, partial
 from gwi_customization.microfinance.utils.fp import compose, join
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
@@ -18,9 +19,6 @@ def _col_sum(idx):
         return reduce(lambda a, x: a + x[idx], rows, 0)
 
     return fn
-
-
-_stringify_accounts = compose(join(", "), partial(map, lambda x: "'{}'".format(x)))
 
 
 def execute(filters={}):
@@ -43,44 +41,38 @@ def execute(filters={}):
             frappe.db.get_value("Company", company, "abbr")
         ),
     ]
-    conds = [
-        "against_voucher_type = 'Microfinance Loan'",
-        "against_voucher = '{}'".format(filters.get("loan")),
-        "account NOT IN ({})".format(_stringify_accounts(accounts_to_exclude)),
-    ]
-    opening_entries = frappe.db.sql(
-        """
-            SELECT
-                sum(credit) AS credit,
-                sum(debit) AS debit,
-                sum(credit - debit) as amount
-            FROM `tabGL Entry`
-            WHERE {conds} AND posting_date <'{from_date}'
-        """.format(
-            conds=join(" AND ")(conds), from_date=filters.get("from_date")
-        ),
-        as_dict=True,
-    )[0]
-    results = frappe.db.sql(
-        """
-            SELECT
-                posting_date,
-                account,
-                sum(credit) as credit,
-                sum(debit) as debit,
-                sum(credit - debit) as amount,
-                remarks
-            FROM `tabGL Entry`
-            WHERE {conds}
-            AND posting_date BETWEEN '{from_date}' AND '{to_date}'
-            GROUP BY posting_date, account, voucher_no, remarks
-            ORDER BY posting_date ASC, name ASC
-        """.format(
-            conds=join(" AND ")(conds),
-            from_date=filters.get("from_date"),
-            to_date=filters.get("to_date"),
+    GLEntry = frappe.qb.DocType("GL Entry")
+    q = (
+        frappe.qb.from_(GLEntry)
+        .where(
+            (GLEntry.against_voucher_type == "Microfinance Loan")
+            & (GLEntry.against_voucher == filters.get("loan"))
+            & (GLEntry.account.notin(accounts_to_exclude))
         )
     )
+
+    opening_entries = (
+        q.select(
+            Sum(GLEntry.credit, "credit"),
+            Sum(GLEntry.debit, "debit"),
+            Sum(GLEntry.credit - GLEntry.debit, "amount"),
+        ).where(GLEntry.posting_date < filters.get("from_date"))
+    ).run(as_dict=True)[0]
+    results = (
+        q.select(
+            GLEntry.posting_date,
+            GLEntry.account,
+            Sum(GLEntry.credit, "credit"),
+            Sum(GLEntry.debit, "debit"),
+            Sum(GLEntry.credit - GLEntry.debit, "amount"),
+            GLEntry.remarks,
+        )
+        .where(GLEntry.posting_date[filters.get("from_date") : filters.get("to_date")])
+        .groupby(
+            GLEntry.posting_date, GLEntry.account, GLEntry.voucher_no, GLEntry.remarks
+        )
+        .orderby(GLEntry.posting_date, GLEntry.name)
+    ).run()
 
     opening_credit = opening_entries.get("credit") or 0
     opening_debit = opening_entries.get("debit") or 0

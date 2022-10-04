@@ -9,17 +9,14 @@ import frappe
 @frappe.whitelist()
 def get_service_details(loanee=None, customer=None):
     if customer:
-        results = frappe.db.sql(
-            """
-                SELECT date_of_retirement, net_salary_amount
-                FROM `tabMicrofinance Loanee`
-                WHERE customer = '{customer}'
-                LIMIT 1
-            """.format(
-                customer=customer
-            ),
-            as_dict=True,
+        Loanee = frappe.qb.DocType("Microfinance Loanee")
+        q = (
+            frappe.qb.from_(Loanee)
+            .select(Loanee.date_of_retirement, Loanee.net_salary_amount)
+            .where(Loanee.customer == customer)
+            .limit(1)
         )
+        results = q.run(as_dict=1)
         try:
             return results[0]
         except IndexError:

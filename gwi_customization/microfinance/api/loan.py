@@ -4,9 +4,10 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import getdate, get_last_day, add_months, flt, rounded, cint
+from frappe.query_builder.functions import Sum
+from frappe.utils import get_last_day, add_months, flt, rounded, cint
 from functools import partial
-from gwi_customization.microfinance.utils.fp import join, compose, pick
+from gwi_customization.microfinance.utils.fp import compose, pick
 from gwi_customization.microfinance.utils import month_diff, calc_interest
 
 
@@ -15,22 +16,19 @@ def get_disbursed(loan):
     loan_account = frappe.get_value("Microfinance Loan", loan, "loan_account")
     if not loan_account:
         raise frappe.DoesNotExistError("Loan: {} not found".format(loan))
-    conds = [
-        "account = '{}'".format(loan_account),
-        "voucher_type = 'Microfinance Disbursement'",
-        "against_voucher_type = 'Microfinance Loan'",
-        "against_voucher = '{}'".format(loan),
-    ]
-    return (
-        frappe.db.sql(
-            """
-            SELECT sum(debit) FROM `tabGL Entry` WHERE {}
-        """.format(
-                " AND ".join(conds)
-            )
-        )[0][0]
-        or 0
+
+    GLEntry = frappe.qb.DocType("GL Entry")
+    q = (
+        frappe.qb.from_(GLEntry)
+        .select(Sum(GLEntry.debit))
+        .where(
+            (GLEntry.account == loan_account)
+            & (GLEntry.voucher_type == "Microfinance Disbursement")
+            & (GLEntry.against_voucher_type == "Microfinance Loan")
+            & (GLEntry.against_voucher == loan)
+        )
     )
+    return q.run()[0][0] or 0
 
 
 @frappe.whitelist()
@@ -62,55 +60,56 @@ def get_recovered_principal(loan):
 def get_outstanding_principal(loan, posting_date=None):
     """Get outstanding principal"""
     loan_account = frappe.get_value("Microfinance Loan", loan, "loan_account")
-    cond = [
-        "account = '{}'".format(loan_account),
-        "against_voucher_type = 'Microfinance Loan'",
-        "against_voucher = '{}'".format(loan),
-    ]
-    if posting_date:
-        cond.append("posting_date <= '{}'".format(getdate(posting_date)))
-    outstanding = (
-        frappe.db.sql(
-            """
-            SELECT sum(debit) - sum(credit)
-            FROM `tabGL Entry`
-            WHERE {}
-        """.format(
-                " AND ".join(cond)
-            )
-        )[0][0]
-        or 0
+
+    GLEntry = frappe.qb.DocType("GL Entry")
+    q = (
+        frappe.qb.from_(GLEntry)
+        .select(Sum(GLEntry.debit) - Sum(GLEntry.credit))
+        .where(
+            (GLEntry.account == loan_account)
+            & (GLEntry.voucher_type == "Microfinance Loan")
+            & (GLEntry.against_voucher == loan)
+        )
     )
-    return outstanding
+
+    if posting_date:
+        q = q.where(GLEntry.posting_date < posting_date)
+    return q.run()[0][0] or 0
 
 
 def get_recovered(loan):
     loan_type = frappe.db.get_value("Microfinance Loan", loan, "loan_type")
     if loan_type != "EMI":
         return get_recovered_principal(loan)
-    result = frappe.db.sql(
-        """
-            SELECT SUM(paid_amount) FROM `tabMicrofinance Loan Interest`
-            WHERE docstatus < 2 AND loan = %(loan)s
-        """,
-        values={"loan": loan},
+
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where((LoanInterest.docstatus < 2) & (LoanInterest.loan == loan))
+        .select(Sum(LoanInterest.paid_amount))
     )
-    return result[0][0] or 0
+    return q.run()[0][0] or 0
 
 
 def get_unrecovered(loan):
     loan_type = frappe.db.get_value("Microfinance Loan", loan, "loan_type")
     if loan_type != "EMI":
         return get_outstanding_principal(loan)
-    result = frappe.db.sql(
-        """
-            SELECT SUM(billed_amount + principal_amount + fine_amount - paid_amount)
-            FROM `tabMicrofinance Loan Interest`
-            WHERE docstatus < 2 AND loan = %(loan)s
-        """,
-        values={"loan": loan},
+
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where((LoanInterest.docstatus < 2) & (LoanInterest.loan == loan))
+        .select(
+            Sum(
+                LoanInterest.billed_amount
+                + LoanInterest.principal_amount
+                + LoanInterest.fine_amount
+                - LoanInterest.paid_amount
+            )
+        )
     )
-    return result[0][0] or 0
+    return q.run()[0][0] or 0
 
 
 def get_chart_data(loan_name):
@@ -121,20 +120,17 @@ def get_chart_data(loan_name):
     write_off_account = frappe.get_value(
         "Microfinance Loan Settings", None, "write_off_account"
     )
-    conds = [
-        "account = '{}'".format(write_off_account),
-        "against_voucher = '{}'".format(loan_name),
-    ]
-    wrote_off = (
-        frappe.db.sql(
-            """
-            SELECT SUM(debit - credit) FROM `tabGL Entry` WHERE {conds}
-        """.format(
-                conds=join(" AND ")(conds)
-            )
-        )[0][0]
-        or 0
+
+    GLEntry = frappe.qb.DocType("GL Entry")
+    q = (
+        frappe.qb.from_(GLEntry)
+        .select(Sum(GLEntry.debit - GLEntry.credit))
+        .where(
+            (GLEntry.account == write_off_account)
+            & (GLEntry.against_voucher == loan_name)
+        )
     )
+    wrote_off = q.run()[0][0] or 0
 
     data = {
         "labels": ["RC", "OS", "UD", "WO"],
@@ -174,13 +170,13 @@ def update_recovery_status(loan_name, posting_date, status=None):
 @frappe.whitelist()
 def calculate_principal(income, loan_plan, end_date, execution_date):
     """
-        Return a dict containing the maximum allowed principal along with the
-        duration and monthly installment.
+    Return a dict containing the maximum allowed principal along with the
+    duration and monthly installment.
 
-        :param income: Renumeration received by the Customer
-        :param loan_plan: Name of a Loan Plan
-        :param end_date: Maximum date on which the loan could end
-        :param execution_date: Date on which the loan would start
+    :param income: Renumeration received by the Customer
+    :param loan_plan: Name of a Loan Plan
+    :param end_date: Maximum date on which the loan could end
+    :param execution_date: Date on which the loan would start
     """
     plan = frappe.get_doc("Microfinance Loan Plan", loan_plan)
     if not plan.income_multiple or not plan.max_duration:
@@ -253,12 +249,19 @@ def set_npa(loan, npa_date, final_amount, remarks=None):
 
 
 def get_outstanding(loan, posting_date):
-    result = frappe.db.sql(
-        """
-            SELECT SUM(billed_amount + principal_amount + fine_amount - paid_amount)
-            FROM `tabMicrofinance Loan Interest`
-            WHERE loan = %(loan)s AND posting_date <= %(posting_date)s
-        """,
-        values={"loan": loan, "posting_date": posting_date},
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(LoanInterest)
+        .where(
+            (LoanInterest.loan == loan) & (LoanInterest.posting_date <= posting_date)
+        )
+        .select(
+            Sum(
+                LoanInterest.billed_amount
+                + LoanInterest.principal_amount
+                + LoanInterest.fine_amount
+                - LoanInterest.paid_amount
+            )
+        )
     )
-    return result[0][0] or 0
+    return q.run()[0][0] or 0

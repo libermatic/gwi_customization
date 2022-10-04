@@ -4,25 +4,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.query_builder.functions import Max
 from frappe.utils import today, add_months, cint, getdate
 from functools import partial
 from operator import neg
 from gwi_customization.microfinance.utils.fp import compose, join
 from gwi_customization.microfinance.api.loan import get_outstanding_principal
 from gwi_customization.microfinance.api.interest import get_current_interest
-
-
-def _set_filter(filters, fieldname):
-    def fn(conds):
-        if filters.get(fieldname):
-            return conds + [
-                "loan.{field} = '{value}'".format(
-                    field=fieldname, value=filters.get(fieldname)
-                )
-            ]
-        return conds
-
-    return fn
 
 
 def _result_to_data(row):
@@ -70,36 +58,35 @@ def execute(filters=None):
         _("Curent Interest") + ":Currency/currency:90",
     ]
 
-    conds = compose(
-        _set_filter(filters, "name"),
-        _set_filter(filters, "customer"),
-        _set_filter(filters, "loan_plan"),
-    )(["loan.disbursement_status != 'Sanctioned'"])
-
-    result = frappe.db.sql(
-        """
-            SELECT
-                loan.customer,
-                loan.name,
-                loan.recovery_status,
-                max(recovery.posting_date),
-                interest.period,
-                loan.posting_date
-            FROM `tabMicrofinance Loan` AS loan
-            LEFT JOIN `tabMicrofinance Recovery` AS recovery
-                ON recovery.docstatus = 1
-                AND recovery.loan = loan.name
-            LEFT JOIN `tabMicrofinance Loan Interest` AS interest
-                ON interest.docstatus = 1
-                AND interest.loan = loan.name
-                AND interest.billed_amount = interest.paid_amount
-            WHERE loan.docstatus = 1
-            AND {conds}
-            GROUP BY loan.name
-        """.format(
-            conds=join(" AND ")(conds)
+    Loan = frappe.qb.DocType("Microfinance Loan")
+    Recovery = frappe.qb.DocType("Microfinance Recovery")
+    LoanInterest = frappe.qb.DocType("Microfinance Loan Interest")
+    q = (
+        frappe.qb.from_(Loan)
+        .left_join(Recovery)
+        .on((Recovery.docstatus == 1) & (Recovery.loan == Loan.name))
+        .left_join(LoanInterest)
+        .on(
+            (LoanInterest.docstatus == 1)
+            & (LoanInterest.loan == Loan.name)
+            & (LoanInterest.billed_amount == LoanInterest.paid_amount)
         )
+        .select(
+            Loan.customer,
+            Loan.name,
+            Loan.recovery_status,
+            Max(Recovery.posting_date),
+            LoanInterest.period,
+            Loan.posting_date,
+        )
+        .where((Loan.docstatus == 1) & (Loan.disbursement_status != "Sanctioned"))
+        .groupby(Loan.name)
     )
+
+    for field in ["name", "customer", "loan_plan"]:
+        if filters.get(field):
+            q = q.where(Loan[field] == filters.get(field))
+    result = q.run()
     data = compose(
         list,
         partial(map, _result_to_data),
