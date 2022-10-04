@@ -1,9 +1,12 @@
-frappe.pages['calculate_principal'].on_page_load = function(wrapper) {
+frappe.pages['calculate_principal'].on_page_load = function (wrapper) {
   const page = frappe.ui.make_app_page({
     parent: wrapper,
     title: 'Calculate Principal and Interests',
     single_column: true,
   });
+
+  frappe.require('calculate_principal.bundle.css');
+
   const fg = new frappe.ui.FieldGroup({
     fields: [
       { label: 'Income', fieldtype: 'Currency', reqd: 1 },
@@ -30,26 +33,30 @@ frappe.pages['calculate_principal'].on_page_load = function(wrapper) {
   wrapper.fg = fg;
   const rh = $(fg.fields_dict['result_html'].wrapper);
   rh.css('overflow', 'auto').addClass('hidden');
-  page.set_primary_action('Calculate', async function() {
+  page.set_primary_action('Calculate', async function () {
     const values = fg.get_values();
     if (values) {
-      const { message: data } = await frappe.call({
-        method: 'gwi_customization.microfinance.api.loan.calculate_principal',
-        args: { ...values, execution_date: frappe.datetime.nowdate() },
-      });
-      rh
-        .removeClass('hidden')
-        .html(frappe.render_template('calculate_principal', data));
+      try {
+        const { message: data } = await frappe.call({
+          method: 'gwi_customization.microfinance.api.loan.calculate_principal',
+          args: { ...values, execution_date: frappe.datetime.nowdate() },
+        });
+        rh.removeClass('hidden').html(
+          frappe.render_template('calculate_principal', data)
+        );
+      } catch (e) {
+        console.log(e);
+      }
     }
   });
-  page.set_secondary_action('Reset', function() {
+  page.set_secondary_action('Reset', function () {
     rh.empty().addClass('hidden');
     fg.set_values({ income: null, end_date: null, loan_plan: null });
   });
   frappe.breadcrumbs.add('Microfinance');
 };
 
-frappe.pages['calculate_principal'].refresh = function({ fg }) {
+frappe.pages['calculate_principal'].refresh = function ({ fg }) {
   if (frappe.route_options) {
     const { income, end_date, loan_plan } = frappe.route_options;
     fg.set_value('income', income);

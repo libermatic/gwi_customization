@@ -184,7 +184,7 @@ def calculate_principal(income, loan_plan, end_date, execution_date):
     """
     plan = frappe.get_doc("Microfinance Loan Plan", loan_plan)
     if not plan.income_multiple or not plan.max_duration:
-        frappe.throw("Missing values in Loan Plan", ValueError)
+        frappe.throw("Missing values in Loan Plan")
 
     recovery_amount = flt(income) * plan.income_multiple / plan.max_duration
 
