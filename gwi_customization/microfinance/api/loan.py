@@ -66,13 +66,13 @@ def get_outstanding_principal(loan, posting_date=None):
         .select(Sum(GLEntry.debit) - Sum(GLEntry.credit))
         .where(
             (GLEntry.account == loan_account)
-            & (GLEntry.voucher_type == "Microfinance Loan")
+            & (GLEntry.against_voucher_type == "Microfinance Loan")
             & (GLEntry.against_voucher == loan)
         )
     )
 
     if posting_date:
-        q = q.where(GLEntry.posting_date < posting_date)
+        q = q.where(GLEntry.posting_date <= posting_date)
     return q.run()[0][0] or 0
 
 
