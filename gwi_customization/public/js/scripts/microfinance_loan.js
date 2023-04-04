@@ -154,6 +154,7 @@ export default {
       type: 'percentage',
       data: frm.doc.__onload['chart_data'],
       colors: ['green', 'orange', 'blue', 'grey'],
+      height: 240,
     });
   },
   clear_chart: function (frm) {

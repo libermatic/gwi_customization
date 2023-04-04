@@ -112,14 +112,16 @@ class MicrofinanceLoan(Document):
 
     def onload(self):
         if self.docstatus == 1:
-            self.set_onload("chart_data", get_chart_data(self.name))
+            chart_data = get_chart_data(self.name)
+            if chart_data.get("labels"):
+                self.set_onload("chart_data", get_chart_data(self.name))
             self.set_onload(
                 "outstanding_principal", get_outstanding_principal(self.name)
             )
 
     def before_save(self):
         # set Loan Plan values
-        loan_plan = frappe.get_doc("Microfinance Loan Plan", self.loan_plan,)
+        loan_plan = frappe.get_doc("Microfinance Loan Plan", self.loan_plan)
         if not self.loan_type:
             self.loan_type = loan_plan.loan_type
         if not self.rate_of_interest:

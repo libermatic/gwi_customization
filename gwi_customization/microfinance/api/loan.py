@@ -131,12 +131,27 @@ def get_chart_data(loan_name):
     )
     wrote_off = q.run()[0][0] or 0
 
+    labels = []
+    values = []
+    if recovered:
+        labels.append("Recovered")
+        values.append(recovered)
+    if outstanding:
+        labels.append("Outstanding")
+        values.append(outstanding)
+    if undisbursed:
+        labels.append("Undisbursed")
+        values.append(undisbursed)
+    if wrote_off:
+        labels.append("Wrote Off")
+        values.append(wrote_off)
+
     data = {
-        "labels": ["RC", "OS", "UD", "WO"],
+        "labels": labels,
         "datasets": [
             {
                 "name": "Total",
-                "values": [recovered, outstanding, undisbursed, wrote_off],
+                "values": values,
             }
         ],
     }
