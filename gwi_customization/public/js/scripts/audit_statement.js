@@ -1,7 +1,4 @@
-import Vue from 'vue/dist/vue.js';
-import * as R from 'ramda'
-
-import AuditStatementSummary from '../vue/AuditStatementSummary.vue';
+import * as R from 'ramda';
 
 const sumBy = R.compose(
   R.reduce((a, x) => a + (x ?? 0), 0),
@@ -48,17 +45,15 @@ function set_period(frm, cdt, cdn) {
 
 function render_dashboard(frm) {
   const { balance = 0 } = R.last(frm.doc.transactions) || {};
-  const principals = sumBy(frm.doc.transactions, 'principal');
-  const interests = sumBy(frm.doc.transactions, 'interest');
-  const node = frm.dashboard.add_section('<div />').children()[0];
-  new Vue({
-    el: node,
-    render: (h) =>
-      h(AuditStatementSummary, {
-        props: { principals, interests, balance, formatter: format_currency },
-      }),
-  });
-  frm.dashboard.show();
+  frm.dashboard.add_indicator(
+    `Principal: ${format_currency(sumBy(frm.doc.transactions, 'principal'))}`,
+    'blue'
+  );
+  frm.dashboard.add_indicator(
+    `Interests: ${format_currency(sumBy(frm.doc.transactions, 'interest'))}`,
+    'orange'
+  );
+  frm.dashboard.add_indicator(`Balance: ${format_currency(balance)}`, 'grey');
 }
 
 const audit_statement_detail = {
